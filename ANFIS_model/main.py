@@ -9,7 +9,7 @@ import numpy as np
 from procesamiento_image import process_all_images
 from Training_ANFIS import train_anfis
 from analisis import AnalizadorReglasANFIS
-from prediccion2 import generar_reporte_completo, ejecutar_analisis_completo_mejorado
+from prediccion_analisis import generar_reporte_completo, ejecutar_analisis_completo_mejorado
 
 def ejemplo_basico():
     """
@@ -77,7 +77,7 @@ def ejemplo_prediccion_explicada():
     print("🔎 EJEMPLO - PREDICCIÓN EXPLICADA")
     print("-" * 35)
     
-    from prediccion2 import predict_con_explicacion
+    from prediccion_analisis import predict_con_explicacion
     
     # 1. Entrenar modelo
     X_train, y_train = process_all_images()
@@ -124,7 +124,7 @@ def ejemplo_comparacion_clases():
     print("⚖️ EJEMPLO - COMPARACIÓN ENTRE CLASES")
     print("-" * 40)
     
-    from prediccion2 import comparar_predicciones_por_clase
+    from prediccion_analisis import comparar_predicciones_por_clase
     
     # 1. Entrenar modelo
     X_train, y_train = process_all_images()

@@ -4,3 +4,5 @@ archive.zip
 ./modelos_pruebas/desktop.ini
 ./Mamdani_Model\desktop.ini
 ./ANFIS_model\desktop.ini
+./ANFIS_model/__pycache__/
+./Mamdani_Model/__pycache__/

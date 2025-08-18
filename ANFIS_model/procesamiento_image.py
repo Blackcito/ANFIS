@@ -113,7 +113,7 @@ def process_all_images():
     extrae características GLCM y retorna X_train y y_train.
     """
     # Configurar rutas base
-    base_dir = "./archive/test_2"
+    base_dir = "./archive/test_3"
     
     meningioma_dir = os.path.join(base_dir, "meningioma", "Tr-me_*.jpg")
     notumor_dir = os.path.join(base_dir, "notumor", "Tr-no_*.jpg")
