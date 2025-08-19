@@ -3,226 +3,226 @@ ANÁLISIS DE REGLAS ANFIS - DETECCIÓN DE TUMORES CEREBRALES
 ================================================================================
 
 Total de reglas generadas: 128
-Reglas con activación > 0.01: 31
+Reglas con activación > 0.01: 16
 Top 20 reglas más importantes:
 
 
---- REGLA #1 (Índice: 18) ---
-Condición: SI Contraste es bajo Y ASM es bajo Y Homogeneidad es alto Y Energía es bajo Y Media es bajo Y Entropía es alto Y Varianza es bajo
-Activación media: 0.0607
-Magnitud parámetros: 18.0557
-Importancia total: 1.0965
-Bias: 2.7993
+--- REGLA #1 (Índice: 76) ---
+Condición: SI Contraste es alto Y ASM es bajo Y Homogeneidad es bajo Y Energía es alto Y Media es alto Y Entropía es bajo Y Varianza es bajo
+Activación media: 0.1315
+Magnitud parámetros: 20.8901
+Importancia total: 2.7472
+Bias: -0.2130
 Características más influyentes:
-  - Homogeneidad: -13.8119
-  - Contraste: 9.5347
-  - Media: -4.0208
+  - Contraste: 11.0057
+  - Homogeneidad: -8.4395
+  - Varianza: 7.7249
 
---- REGLA #2 (Índice: 26) ---
-Condición: SI Contraste es bajo Y ASM es bajo Y Homogeneidad es alto Y Energía es alto Y Media es bajo Y Entropía es alto Y Varianza es bajo
-Activación media: 0.0581
-Magnitud parámetros: 16.3055
-Importancia total: 0.9475
-Bias: 2.5935
+--- REGLA #2 (Índice: 72) ---
+Condición: SI Contraste es alto Y ASM es bajo Y Homogeneidad es bajo Y Energía es alto Y Media es bajo Y Entropía es bajo Y Varianza es bajo
+Activación media: 0.1444
+Magnitud parámetros: 14.7516
+Importancia total: 2.1295
+Bias: -0.2770
 Características más influyentes:
-  - Media: -9.4731
-  - Homogeneidad: -8.2074
-  - Contraste: 6.9368
+  - Homogeneidad: -12.8980
+  - Entropía: -4.9543
+  - Media: -3.4784
 
---- REGLA #3 (Índice: 22) ---
-Condición: SI Contraste es bajo Y ASM es bajo Y Homogeneidad es alto Y Energía es bajo Y Media es alto Y Entropía es alto Y Varianza es bajo
-Activación media: 0.0498
-Magnitud parámetros: 18.7581
-Importancia total: 0.9348
-Bias: -0.9786
+--- REGLA #3 (Índice: 73) ---
+Condición: SI Contraste es alto Y ASM es bajo Y Homogeneidad es bajo Y Energía es alto Y Media es bajo Y Entropía es bajo Y Varianza es alto
+Activación media: 0.1035
+Magnitud parámetros: 13.9087
+Importancia total: 1.4401
+Bias: -2.7299
 Características más influyentes:
-  - Contraste: 14.1982
-  - Homogeneidad: -7.6602
-  - Media: -6.7284
+  - Varianza: -8.9345
+  - Homogeneidad: -6.6860
+  - Contraste: -5.5965
 
---- REGLA #4 (Índice: 30) ---
-Condición: SI Contraste es bajo Y ASM es bajo Y Homogeneidad es alto Y Energía es alto Y Media es alto Y Entropía es alto Y Varianza es bajo
-Activación media: 0.0466
-Magnitud parámetros: 16.7317
-Importancia total: 0.7789
-Bias: -0.5348
+--- REGLA #4 (Índice: 77) ---
+Condición: SI Contraste es alto Y ASM es bajo Y Homogeneidad es bajo Y Energía es alto Y Media es alto Y Entropía es bajo Y Varianza es alto
+Activación media: 0.0967
+Magnitud parámetros: 10.6551
+Importancia total: 1.0299
+Bias: 6.2480
 Características más influyentes:
-  - Contraste: 13.2113
-  - Homogeneidad: -7.6687
-  - Media: -5.3725
+  - Homogeneidad: -4.8308
+  - Entropía: -3.6519
+  - Contraste: 3.4307
 
---- REGLA #5 (Índice: 16) ---
-Condición: SI Contraste es bajo Y ASM es bajo Y Homogeneidad es alto Y Energía es bajo Y Media es bajo Y Entropía es bajo Y Varianza es bajo
-Activación media: 0.0263
-Magnitud parámetros: 19.3833
-Importancia total: 0.5098
-Bias: 7.7517
+--- REGLA #5 (Índice: 1) ---
+Condición: SI Contraste es bajo Y ASM es bajo Y Homogeneidad es bajo Y Energía es bajo Y Media es bajo Y Entropía es bajo Y Varianza es alto
+Activación media: 0.0786
+Magnitud parámetros: 4.7669
+Importancia total: 0.3749
+Bias: 0.9105
 Características más influyentes:
-  - Media: -12.3119
-  - Varianza: -8.8572
-  - Energía: 5.6596
+  - Media: 2.9191
+  - Energía: 2.2073
+  - ASM: 1.6173
 
---- REGLA #6 (Índice: 82) ---
-Condición: SI Contraste es alto Y ASM es bajo Y Homogeneidad es alto Y Energía es bajo Y Media es bajo Y Entropía es alto Y Varianza es bajo
-Activación media: 0.0291
-Magnitud parámetros: 16.1376
-Importancia total: 0.4694
-Bias: -0.5350
+--- REGLA #6 (Índice: 9) ---
+Condición: SI Contraste es bajo Y ASM es bajo Y Homogeneidad es bajo Y Energía es alto Y Media es bajo Y Entropía es bajo Y Varianza es alto
+Activación media: 0.0324
+Magnitud parámetros: 11.3483
+Importancia total: 0.3674
+Bias: -4.8145
 Características más influyentes:
-  - Contraste: -13.7046
-  - Media: 8.0522
-  - Homogeneidad: -2.5386
+  - Energía: -5.3838
+  - ASM: -5.2975
+  - Homogeneidad: -4.2636
 
---- REGLA #7 (Índice: 58) ---
-Condición: SI Contraste es bajo Y ASM es alto Y Homogeneidad es alto Y Energía es alto Y Media es bajo Y Entropía es alto Y Varianza es bajo
-Activación media: 0.0320
-Magnitud parámetros: 13.4724
-Importancia total: 0.4309
-Bias: 1.9301
+--- REGLA #7 (Índice: 64) ---
+Condición: SI Contraste es alto Y ASM es bajo Y Homogeneidad es bajo Y Energía es bajo Y Media es bajo Y Entropía es bajo Y Varianza es bajo
+Activación media: 0.0583
+Magnitud parámetros: 5.2717
+Importancia total: 0.3075
+Bias: -0.0054
 Características más influyentes:
-  - Media: -8.8720
-  - Entropía: -6.8029
-  - Varianza: -4.4238
+  - Contraste: -4.0480
+  - Homogeneidad: -3.0216
+  - Media: -1.4472
 
---- REGLA #8 (Índice: 20) ---
-Condición: SI Contraste es bajo Y ASM es bajo Y Homogeneidad es alto Y Energía es bajo Y Media es alto Y Entropía es bajo Y Varianza es bajo
-Activación media: 0.0258
-Magnitud parámetros: 15.8281
-Importancia total: 0.4078
-Bias: -0.7371
+--- REGLA #8 (Índice: 8) ---
+Condición: SI Contraste es bajo Y ASM es bajo Y Homogeneidad es bajo Y Energía es alto Y Media es bajo Y Entropía es bajo Y Varianza es bajo
+Activación media: 0.0413
+Magnitud parámetros: 7.0867
+Importancia total: 0.2925
+Bias: -3.0166
 Características más influyentes:
-  - Media: -11.3874
-  - ASM: 6.4795
-  - Energía: 6.3136
+  - Contraste: -4.0046
+  - Media: 2.9873
+  - Entropía: -2.8198
 
---- REGLA #9 (Índice: 90) ---
-Condición: SI Contraste es alto Y ASM es bajo Y Homogeneidad es alto Y Energía es alto Y Media es bajo Y Entropía es alto Y Varianza es bajo
-Activación media: 0.0260
-Magnitud parámetros: 15.2841
-Importancia total: 0.3977
-Bias: -0.8463
+--- REGLA #9 (Índice: 68) ---
+Condición: SI Contraste es alto Y ASM es bajo Y Homogeneidad es bajo Y Energía es bajo Y Media es alto Y Entropía es bajo Y Varianza es bajo
+Activación media: 0.0396
+Magnitud parámetros: 6.9052
+Importancia total: 0.2731
+Bias: -0.1423
 Características más influyentes:
-  - Contraste: -12.6094
-  - Media: 7.8567
-  - Homogeneidad: -2.8300
+  - Varianza: 4.5679
+  - Homogeneidad: -4.2764
+  - Entropía: 2.1861
 
---- REGLA #10 (Índice: 86) ---
-Condición: SI Contraste es alto Y ASM es bajo Y Homogeneidad es alto Y Energía es bajo Y Media es alto Y Entropía es alto Y Varianza es bajo
-Activación media: 0.0306
-Magnitud parámetros: 11.6148
-Importancia total: 0.3551
-Bias: 2.7152
+--- REGLA #10 (Índice: 69) ---
+Condición: SI Contraste es alto Y ASM es bajo Y Homogeneidad es bajo Y Energía es bajo Y Media es alto Y Entropía es bajo Y Varianza es alto
+Activación media: 0.0372
+Magnitud parámetros: 6.5466
+Importancia total: 0.2436
+Bias: 3.5650
 Características más influyentes:
-  - ASM: 5.8204
-  - Contraste: -5.7384
-  - Energía: 5.6326
+  - Media: -4.5356
+  - Energía: 1.8722
+  - ASM: 1.5575
 
---- REGLA #11 (Índice: 50) ---
-Condición: SI Contraste es bajo Y ASM es alto Y Homogeneidad es alto Y Energía es bajo Y Media es bajo Y Entropía es alto Y Varianza es bajo
-Activación media: 0.0327
-Magnitud parámetros: 8.9315
-Importancia total: 0.2924
-Bias: 1.1875
+--- REGLA #11 (Índice: 65) ---
+Condición: SI Contraste es alto Y ASM es bajo Y Homogeneidad es bajo Y Energía es bajo Y Media es bajo Y Entropía es bajo Y Varianza es alto
+Activación media: 0.0700
+Magnitud parámetros: 3.4365
+Importancia total: 0.2404
+Bias: 0.2981
 Características más influyentes:
-  - Homogeneidad: -6.0795
-  - Contraste: 4.8033
-  - Media: -3.4988
+  - Contraste: -2.4534
+  - Media: -1.2724
+  - Energía: 1.1914
 
---- REGLA #12 (Índice: 24) ---
-Condición: SI Contraste es bajo Y ASM es bajo Y Homogeneidad es alto Y Energía es alto Y Media es bajo Y Entropía es bajo Y Varianza es bajo
-Activación media: 0.0226
-Magnitud parámetros: 11.8983
-Importancia total: 0.2693
-Bias: 5.5903
+--- REGLA #12 (Índice: 12) ---
+Condición: SI Contraste es bajo Y ASM es bajo Y Homogeneidad es bajo Y Energía es alto Y Media es alto Y Entropía es bajo Y Varianza es bajo
+Activación media: 0.0371
+Magnitud parámetros: 5.3735
+Importancia total: 0.1993
+Bias: 1.6005
 Características más influyentes:
-  - Media: -7.4632
-  - Varianza: -5.6621
-  - Energía: 2.7174
+  - Entropía: -3.5422
+  - Media: 2.0489
+  - ASM: 1.7214
 
---- REGLA #13 (Índice: 94) ---
-Condición: SI Contraste es alto Y ASM es bajo Y Homogeneidad es alto Y Energía es alto Y Media es alto Y Entropía es alto Y Varianza es bajo
-Activación media: 0.0271
-Magnitud parámetros: 9.7059
-Importancia total: 0.2629
-Bias: 2.9198
+--- REGLA #13 (Índice: 0) ---
+Condición: SI Contraste es bajo Y ASM es bajo Y Homogeneidad es bajo Y Energía es bajo Y Media es bajo Y Entropía es bajo Y Varianza es bajo
+Activación media: 0.0490
+Magnitud parámetros: 3.7857
+Importancia total: 0.1854
+Bias: -0.4596
 Características más influyentes:
-  - Contraste: -5.6884
-  - ASM: 4.0592
-  - Energía: 3.8809
+  - Media: 3.1984
+  - Varianza: 1.5904
+  - Contraste: 0.9055
 
---- REGLA #14 (Índice: 28) ---
-Condición: SI Contraste es bajo Y ASM es bajo Y Homogeneidad es alto Y Energía es alto Y Media es alto Y Entropía es bajo Y Varianza es bajo
-Activación media: 0.0219
-Magnitud parámetros: 11.6291
-Importancia total: 0.2550
-Bias: -0.4465
+--- REGLA #14 (Índice: 13) ---
+Condición: SI Contraste es bajo Y ASM es bajo Y Homogeneidad es bajo Y Energía es alto Y Media es alto Y Entropía es bajo Y Varianza es alto
+Activación media: 0.0284
+Magnitud parámetros: 5.5205
+Importancia total: 0.1566
+Bias: 3.5752
 Características más influyentes:
-  - Media: -8.3131
-  - ASM: 4.7102
-  - Energía: 4.6222
+  - ASM: -2.6514
+  - Energía: -2.4002
+  - Entropía: 1.4194
 
---- REGLA #15 (Índice: 54) ---
-Condición: SI Contraste es bajo Y ASM es alto Y Homogeneidad es alto Y Energía es bajo Y Media es alto Y Entropía es alto Y Varianza es bajo
-Activación media: 0.0251
-Magnitud parámetros: 9.5989
-Importancia total: 0.2413
-Bias: -0.2625
+--- REGLA #15 (Índice: 5) ---
+Condición: SI Contraste es bajo Y ASM es bajo Y Homogeneidad es bajo Y Energía es bajo Y Media es alto Y Entropía es bajo Y Varianza es alto
+Activación media: 0.0267
+Magnitud parámetros: 4.8474
+Importancia total: 0.1294
+Bias: 2.1080
 Características más influyentes:
-  - Contraste: 7.3104
-  - Homogeneidad: -4.2386
-  - Varianza: 3.0673
+  - Energía: 2.4511
+  - ASM: 2.2308
+  - Media: -1.7153
 
---- REGLA #16 (Índice: 80) ---
-Condición: SI Contraste es alto Y ASM es bajo Y Homogeneidad es alto Y Energía es bajo Y Media es bajo Y Entropía es bajo Y Varianza es bajo
-Activación media: 0.0179
-Magnitud parámetros: 13.2700
-Importancia total: 0.2372
-Bias: -0.6298
+--- REGLA #16 (Índice: 4) ---
+Condición: SI Contraste es bajo Y ASM es bajo Y Homogeneidad es bajo Y Energía es bajo Y Media es alto Y Entropía es bajo Y Varianza es bajo
+Activación media: 0.0199
+Magnitud parámetros: 3.2236
+Importancia total: 0.0640
+Bias: 0.4897
 Características más influyentes:
-  - Entropía: 7.5401
-  - Varianza: 5.2411
-  - Homogeneidad: -5.0581
+  - Varianza: 1.8526
+  - Contraste: 1.8506
+  - Media: 1.4905
 
---- REGLA #17 (Índice: 84) ---
-Condición: SI Contraste es alto Y ASM es bajo Y Homogeneidad es alto Y Energía es bajo Y Media es alto Y Entropía es bajo Y Varianza es bajo
-Activación media: 0.0203
-Magnitud parámetros: 11.0690
-Importancia total: 0.2246
-Bias: 0.7355
-Características más influyentes:
-  - Contraste: 7.0255
-  - Varianza: 5.9166
-  - Entropía: 5.7137
-
---- REGLA #18 (Índice: 62) ---
-Condición: SI Contraste es bajo Y ASM es alto Y Homogeneidad es alto Y Energía es alto Y Media es alto Y Entropía es alto Y Varianza es bajo
-Activación media: 0.0238
-Magnitud parámetros: 8.3538
-Importancia total: 0.1989
-Bias: -0.0469
-Características más influyentes:
-  - Contraste: 6.3941
-  - Homogeneidad: -3.6598
-  - Media: -3.1790
-
---- REGLA #19 (Índice: 88) ---
+--- REGLA #17 (Índice: 88) ---
 Condición: SI Contraste es alto Y ASM es bajo Y Homogeneidad es alto Y Energía es alto Y Media es bajo Y Entropía es bajo Y Varianza es bajo
-Activación media: 0.0150
-Magnitud parámetros: 10.5282
-Importancia total: 0.1579
-Bias: -1.2316
+Activación media: 0.0014
+Magnitud parámetros: 7.4524
+Importancia total: 0.0107
+Bias: -3.1713
 Características más influyentes:
-  - Entropía: 5.7579
-  - Media: 4.4736
-  - Homogeneidad: -4.1503
+  - ASM: 3.7151
+  - Entropía: -3.2330
+  - Energía: 2.9908
 
---- REGLA #20 (Índice: 114) ---
-Condición: SI Contraste es alto Y ASM es alto Y Homogeneidad es alto Y Energía es bajo Y Media es bajo Y Entropía es alto Y Varianza es bajo
-Activación media: 0.0145
-Magnitud parámetros: 9.1565
-Importancia total: 0.1331
-Bias: -0.3659
+--- REGLA #18 (Índice: 92) ---
+Condición: SI Contraste es alto Y ASM es bajo Y Homogeneidad es alto Y Energía es alto Y Media es alto Y Entropía es bajo Y Varianza es bajo
+Activación media: 0.0010
+Magnitud parámetros: 6.1011
+Importancia total: 0.0061
+Bias: -2.6124
 Características más influyentes:
-  - Contraste: -7.6113
-  - Media: 4.6599
-  - Homogeneidad: -1.6714
+  - Varianza: 3.2118
+  - Media: 2.9262
+  - Contraste: 2.2699
+
+--- REGLA #19 (Índice: 89) ---
+Condición: SI Contraste es alto Y ASM es bajo Y Homogeneidad es alto Y Energía es alto Y Media es bajo Y Entropía es bajo Y Varianza es alto
+Activación media: 0.0009
+Magnitud parámetros: 3.0686
+Importancia total: 0.0026
+Bias: -1.7803
+Características más influyentes:
+  - Varianza: 1.7312
+  - Media: 1.2608
+  - Contraste: 1.1601
+
+--- REGLA #20 (Índice: 93) ---
+Condición: SI Contraste es alto Y ASM es bajo Y Homogeneidad es alto Y Energía es alto Y Media es alto Y Entropía es bajo Y Varianza es alto
+Activación media: 0.0006
+Magnitud parámetros: 2.5540
+Importancia total: 0.0015
+Bias: -1.0470
+Características más influyentes:
+  - Varianza: 1.2799
+  - Media: 1.2150
+  - Contraste: 0.9361

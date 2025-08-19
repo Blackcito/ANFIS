@@ -8,6 +8,18 @@ from procesamiento_image import process_all_images
 from Training_ANFIS import train_anfis
 from anfis_sugeno import compute_weights, n_vars, reglas
 from analisis import AnalizadorReglasANFIS
+import os
+from datetime import datetime
+
+def crear_carpeta_resultados():
+    """Crea una carpeta única para guardar todos los resultados"""
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    carpeta = f"Resultados_ANFIS_{timestamp}"
+    os.makedirs(carpeta, exist_ok=True)
+    print(f"\n📂 Todos los resultados se guardarán en: {carpeta}")
+    return carpeta
+
+
 
 def predict_sugeno(X, mf_params, theta, threshold=0.5):
     """
@@ -401,9 +413,7 @@ def ejecutar_analisis_completo_mejorado():
     print("⚖️ Comparando reglas por clase...")
     comparacion = comparar_predicciones_por_clase(X_train, y_train, mf_opt, theta_opt)
     
-    # 6. Crear visualización de reglas discriminativas
-    print("📈 Creando visualizaciones adicionales...")
-    crear_visualizacion_reglas_discriminativas(comparacion, 'reglas_discriminativas.png')
+  
     
     # 7. Resumen final
     print("\n" + "="*60)

@@ -107,19 +107,40 @@ def preprocess_image(i,image_path):
 
 
 
-def process_all_images():
-    """
-    Recorre las imágenes en los directorios especificados,
-    extrae características GLCM y retorna X_train y y_train.
-    """
-    # Configurar rutas base
-    base_dir = "./archive/test_3"
+def process_all_images(base_dir="./archive/test_3"):
+    """Recorre imágenes en directorio con detección automática de prefijos"""
+    # Intentar diferentes patrones de búsqueda
+    patterns_to_try = [
+        # Patrones para entrenamiento
+        (os.path.join(base_dir, "meningioma", "Tr-me_*.jpg"), 
+         os.path.join(base_dir, "notumor", "Tr-no_*.jpg")),
+        
+        # Patrones para prueba
+        (os.path.join(base_dir, "meningioma", "Te-me_*.jpg"), 
+         os.path.join(base_dir, "notumor", "Te-no_*.jpg")),
+        
+        # Patrón genérico como respaldo
+        (os.path.join(base_dir, "meningioma", "*.jpg"), 
+         os.path.join(base_dir, "notumor", "*.jpg")),
+        
+        # Incluir mayúsculas/minúsculas
+        (os.path.join(base_dir, "meningioma", "*.[jJ][pP][gG]"), 
+         os.path.join(base_dir, "notumor", "*.[jJ][pP][gG]"))
+    ]
     
-    meningioma_dir = os.path.join(base_dir, "meningioma", "Tr-me_*.jpg")
-    notumor_dir = os.path.join(base_dir, "notumor", "Tr-no_*.jpg")
-
-    # Obtener todas las rutas de imágenes
-    image_paths = glob.glob(meningioma_dir) + glob.glob(notumor_dir)
+    image_paths = []
+    for meningioma_pattern, notumor_pattern in patterns_to_try:
+        if not image_paths:  # Solo si aún no hay rutas
+            image_paths = glob.glob(meningioma_pattern) + glob.glob(notumor_pattern)
+    
+    # Mensaje informativo si no encuentra imágenes
+    if len(image_paths) == 0:
+        print(f"\n⚠️ ADVERTENCIA: No se encontraron imágenes en {base_dir}")
+        print("Patrones intentados:")
+        for i, (m, n) in enumerate(patterns_to_try):
+            print(f"  {i+1}. Meningioma: {m}")
+            print(f"     Notumor:   {n}")
+        return np.zeros((0, 7)), []  # Retorno seguro
 
     features = []
     labels = []
