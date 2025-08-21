@@ -107,77 +107,65 @@ def preprocess_image(i,image_path):
 
 
 
-def process_all_images(base_dir="./archive/test_3"):
-    """Recorre imágenes en directorio con detección automática de prefijos"""
-    # Intentar diferentes patrones de búsqueda
-    patterns_to_try = [
-        # Patrones para entrenamiento
-        (os.path.join(base_dir, "meningioma", "Tr-me_*.jpg"), 
-         os.path.join(base_dir, "notumor", "Tr-no_*.jpg")),
-        
-        # Patrones para prueba
-        (os.path.join(base_dir, "meningioma", "Te-me_*.jpg"), 
-         os.path.join(base_dir, "notumor", "Te-no_*.jpg")),
-        
-        # Patrón genérico como respaldo
-        (os.path.join(base_dir, "meningioma", "*.jpg"), 
-         os.path.join(base_dir, "notumor", "*.jpg")),
-        
-        # Incluir mayúsculas/minúsculas
-        (os.path.join(base_dir, "meningioma", "*.[jJ][pP][gG]"), 
-         os.path.join(base_dir, "notumor", "*.[jJ][pP][gG]"))
-    ]
-    
-    image_paths = []
-    for meningioma_pattern, notumor_pattern in patterns_to_try:
-        if not image_paths:  # Solo si aún no hay rutas
-            image_paths = glob.glob(meningioma_pattern) + glob.glob(notumor_pattern)
-    
-    # Mensaje informativo si no encuentra imágenes
+def process_all_images(base_dir="./archive/test"):
+    """
+    Lee todas las imágenes válidas en:
+      base_dir/meningioma/*
+      base_dir/notumor/*
+    Devuelve (features_raw, labels) sin normalizar.
+    """
+    valid_exts = {".jpg", ".jpeg", ".png", ".tif", ".tiff"}
+    men_dir = os.path.join(base_dir, "meningioma")
+    no_dir  = os.path.join(base_dir, "notumor")
+
+    men_paths = sorted([
+        p for p in glob.glob(os.path.join(men_dir, "*"))
+        if os.path.splitext(p)[1].lower() in valid_exts
+    ])
+    not_paths = sorted([
+        p for p in glob.glob(os.path.join(no_dir, "*"))
+        if os.path.splitext(p)[1].lower() in valid_exts
+    ])
+
+    image_paths = men_paths + not_paths
+
     if len(image_paths) == 0:
         print(f"\n⚠️ ADVERTENCIA: No se encontraron imágenes en {base_dir}")
-        print("Patrones intentados:")
-        for i, (m, n) in enumerate(patterns_to_try):
-            print(f"  {i+1}. Meningioma: {m}")
-            print(f"     Notumor:   {n}")
-        return np.zeros((0, 7)), []  # Retorno seguro
+        print("Rutas inspeccionadas:")
+        print(" ", men_dir)
+        print(" ", no_dir)
+        return np.zeros((0, 7)), []
 
     features = []
     labels = []
     error_count = 0
     start_time = time.time()
 
-    print("\nProcesando imágenes:")
+    print(f"\nProcesando {len(image_paths)} imágenes en {base_dir}:")
     for i, path in enumerate(image_paths):
         try:
             if i % 100 == 0:
                 elapsed = time.time() - start_time
-                print(f"\nImagen {i+1}/{len(image_paths)} - Tiempo: {elapsed:.2f}s")
+                print(f"  Imagen {i+1}/{len(image_paths)} - {elapsed:.2f}s")
                 sys.stdout.flush()
-            
+
             processed_img = preprocess_image(i, path)
-            glcm_features = extract_glcm_features(i,processed_img)
+            glcm_features = extract_glcm_features(i, processed_img)
             features.append(glcm_features)
             labels.append(1 if "meningioma" in path.lower() else 0)
         except Exception as e:
             error_count += 1
             print(f"\nERROR en imagen {i+1}: {path}")
-            print(f"Tipo error: {str(e)}")
-            print("Saltando imagen...")
+            print(f"  {str(e)}")
+            print("  Saltando imagen...")
             continue
 
     print(f"\nProcesamiento completado. Errores: {error_count}/{len(image_paths)}")
     print(f"Tiempo total: {time.time() - start_time:.2f} segundos")
 
-    # Normalizar
-    scaler = StandardScaler()
-    normalized_features = scaler.fit_transform(features)
+    features = np.array(features, dtype=float)
+    return features, labels
 
-    print(f"\nNormalización exitosa. Dimensiones: {normalized_features.shape}")
-    # (opcional) Mostrar ejemplo de características
-    print("Ejemplo de características normalizadas:\n", normalized_features[0])
-    
-    return normalized_features, labels
 
 if __name__ == "__main__":
     # Para probar de forma independiente
