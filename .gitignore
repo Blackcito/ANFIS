@@ -1,5 +1,4 @@
-.venv/
-.entorno_virtual/
+entorno_virtual/
 desktop.ini
 archive.zip 
 ./modelos_pruebas/desktop.ini
