@@ -117,7 +117,7 @@ def process_all_images(base_dir="./archive/test_2", save_dir="./debug_images", s
         try:
             if i % 100 == 0:
                 elapsed = time.time() - start_time
-                print(f"\nImagen {i+1}/{len(image_paths)} - Tiempo: {elapsed:.2f}s")
+                print(f"  Imagen {i+1}/{len(image_paths)} - {elapsed:.2f}s")
                 sys.stdout.flush()
 
             processed_img = preprocess_image(i, path, save_dir=save_dir, save_images=save_images)
@@ -128,8 +128,8 @@ def process_all_images(base_dir="./archive/test_2", save_dir="./debug_images", s
         except Exception as e:
             error_count += 1
             print(f"\nERROR en imagen {i+1}: {path}")
-            print(f"Tipo error: {str(e)}")
-            print("Saltando imagen...")
+            print(f"  {str(e)}")
+            print("  Saltando imagen...")
             continue
 
     print(f"\nProcesamiento completado. Errores: {error_count}/{len(image_paths)}")

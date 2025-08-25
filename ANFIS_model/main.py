@@ -13,17 +13,32 @@ from prediccion_analisis import (
 )
 from analisis import AnalizadorReglasANFIS
 
-def cargar_datos_train_test(train_dir="./archive/test_3", test_dir="./archive/train_1"):
-    """Carga datos de train y test"""
-    X_train, y_train = process_all_images(base_dir="./archive/test_2")
-    X_test,  y_test  = process_all_images(base_dir="./archive/test_1")
-    
+def cargar_datos_train_test(train_dir="./archive/Training", test_dir="./archive/test"):
+    """Carga características sin normalizar y aplica StandardScaler solo una vez usando train."""
+    X_train, y_train = process_all_images(base_dir=train_dir)
+    X_test,  y_test  = process_all_images(base_dir=test_dir)
+
+    if X_train.size == 0:
+        raise RuntimeError(f"No hay imágenes extraídas en {train_dir}. Revisa rutas y extensiones.")
+    if len(y_train) == 0:
+        raise RuntimeError(f"No hay etiquetas en {train_dir}.")
+
+    # convertir etiquetas a arrays
+    y_train = np.array(y_train, dtype=int)
+    y_test  = np.array(y_test, dtype=int) if len(y_test) > 0 else np.array([])
+
     # Normalización usando solo train
     scaler = StandardScaler()
     X_train = scaler.fit_transform(X_train)
-    X_test  = scaler.transform(X_test)
-    
+
+    if X_test.size == 0:
+        print(f"⚠️ ADVERTENCIA: No hay imágenes en {test_dir}. Se devuelve X_test vacío.")
+        X_test = np.zeros((0, X_train.shape[1]))
+    else:
+        X_test = scaler.transform(X_test)
+
     return X_train, y_train, X_test, y_test
+
 
 def entrenar_y_evaluar():
     """Pipeline completo de entrenamiento y evaluación en test"""
