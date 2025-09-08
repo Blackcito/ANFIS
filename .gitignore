@@ -5,4 +5,6 @@ archive.zip
 ./Mamdani_Model\desktop.ini
 ./ANFIS_model\desktop.ini
 ./ANFIS_model/__pycache__
+ANFIS_model_3_cate\__pycache__
 ./Mamdani_Model/__pycache__
+__pycache__
