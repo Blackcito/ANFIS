@@ -1,10 +1,17 @@
+# Entorno virtual
 entorno_virtual/
+ANFIS_VENV/
+
+# Archivos de sistema
 desktop.ini
-archive.zip 
-./modelos_pruebas/desktop.ini
-./Mamdani_Model\desktop.ini
-./ANFIS_model\desktop.ini
-./ANFIS_model/__pycache__
-ANFIS_model_3_cate\__pycache__
-./Mamdani_Model/__pycache__
-__pycache__
+archive.zip
+
+# Carpetas de caché de Python
+__pycache__/
+*/__pycache__/
+
+# Carpetas específicas
+modelos_pruebas/
+Mamdani_Model/
+ANFIS_model/
+ANFIS_model_3_cate/

@@ -86,7 +86,49 @@ def extract_glcm_features(i, image, save_dir=None, filename=None,
     return np.array([contrast, asm, homogeneity, energy, mean, entropy, variance])
 
 
-def process_all_images(base_dir="./archive/test_2", save_dir="./debug_images", save_images=False):
+def process_all_images(base_dir="./archive/test_2", save_dir="./debug_images", 
+                      save_images=False, normalize=False, use_cache=True):
+    """
+    Procesa imágenes con sistema de caché simple para características
+    
+    Args:
+        base_dir: Directorio con las imágenes
+        save_dir: Directorio para guardar imágenes de debug
+        save_images: Si guarda imágenes intermedias
+        normalize: Si normaliza características
+        use_cache: Si usa caché para acelerar procesamiento
+    """
+    cache_dir = "./features_cache"
+    # Crear nombre único basado en el directorio
+    base_name = os.path.basename(os.path.normpath(base_dir))
+    cache_file = os.path.join(cache_dir, f"{base_name}_features.npz")
+    
+    # 1. Intentar cargar desde caché
+    if use_cache and os.path.exists(cache_file):
+        print(f" Cargando características desde caché: {cache_file}")
+        try:
+            data = np.load(cache_file)
+            features = data['features']
+            labels = data['labels']
+            
+            # Verificación básica: el archivo no está vacío
+            if len(features) > 0 and len(labels) > 0:
+                print(f"   - {len(features)} muestras cargadas")
+                
+                if normalize:
+                    scaler = StandardScaler()
+                    features = scaler.fit_transform(features)
+                    print("   - Características normalizadas")
+                
+                return features, labels
+            else:
+                print(" Caché vacío, reprocesando...")
+        except Exception as e:
+            print(f" Error cargando caché: {e}, reprocesando...")
+    
+    # 2. Si no hay caché válido, procesar imágenes
+    print("🔄 Procesando imágenes desde disco...")
+    
     patterns_to_try = [
         (os.path.join(base_dir, "meningioma", "Tr-me_*.jpg"),
          os.path.join(base_dir, "notumor", "Tr-no_*.jpg")),
@@ -104,7 +146,7 @@ def process_all_images(base_dir="./archive/test_2", save_dir="./debug_images", s
             image_paths = glob.glob(meningioma_pattern) + glob.glob(notumor_pattern)
 
     if len(image_paths) == 0:
-        print(f"\n⚠️ ADVERTENCIA: No se encontraron imágenes en {base_dir}")
+        print(f"\n ADVERTENCIA: No se encontraron imágenes en {base_dir}")
         return np.zeros((0, 7)), []
 
     features = []
@@ -135,17 +177,58 @@ def process_all_images(base_dir="./archive/test_2", save_dir="./debug_images", s
     print(f"\nProcesamiento completado. Errores: {error_count}/{len(image_paths)}")
     print(f"Tiempo total: {time.time() - start_time:.2f} segundos")
 
-    scaler = StandardScaler()
-    normalized_features = scaler.fit_transform(features) if features else np.zeros((0,7))
+    # Convertir a array
+    features = np.array(features) if features else np.zeros((0,7))
+    
+    # 3. Guardar en caché si se solicita
+    if use_cache:
+        os.makedirs(cache_dir, exist_ok=True)
+        np.savez(cache_file, features=features, labels=labels)
+        print(f" Características guardadas en caché: {cache_file}")
+        print(f"   - {len(features)} muestras")
+        print(f"   - Tamaño: {os.path.getsize(cache_file) / 1024 / 1024:.2f} MB")
+    
+    # 4. Aplicar normalización si se solicita
+    if normalize:
+        scaler = StandardScaler()
+        features = scaler.fit_transform(features)
+        print("   - Características normalizadas")
+    
+    return features, labels
 
-    return normalized_features, labels
+
+# Función para gestionar caché desde main.py
+def gestionar_cache():
+    """Gestiona archivos de caché de características"""
+    cache_dir = "./features_cache"
+    if not os.path.exists(cache_dir):
+        print(" No hay archivos de caché")
+        return
+    
+    archivos = os.listdir(cache_dir)
+    print(f"\n Archivos en caché ({len(archivos)}):")
+    for archivo in archivos:
+        ruta = os.path.join(cache_dir, archivo)
+        tamaño = os.path.getsize(ruta) / 1024 / 1024  # MB
+        # Cargar metadata básica
+        try:
+            data = np.load(ruta)
+            muestras = len(data['features'])
+            print(f"  - {archivo} ({muestras} muestras, {tamaño:.2f} MB)")
+        except:
+            print(f"  - {archivo} (corrupto, {tamaño:.2f} MB)")
+    
+    if archivos:
+        opcion = input("\n¿Limpiar caché? (s/n): ").strip().lower()
+        if opcion == 's':
+            for archivo in archivos:
+                os.remove(os.path.join(cache_dir, archivo))
+            print(" Caché limpiado")
 
 
 if __name__ == "__main__":
-    # Ejemplos:
-    # Guardar imágenes:
-    # X, y = process_all_images(base_dir="./archive/test_2", save_dir="./debug_images", save_images=True)
-    # No guardar:
-    # X, y = process_all_images(base_dir="./archive/test_2", save_images=False)
-
-    X_train, y_train = process_all_images(base_dir="./archive/test_2", save_dir="./debug_images", save_images=True)
+    # Ejemplos de uso:
+    # Con caché (recomendado):
+    X, y = process_all_images(base_dir="./archive/test_2", use_cache=True)
+    # Sin caché (forzar reprocesamiento):
+    # X, y = process_all_images(base_dir="./archive/test_2", use_cache=False)

@@ -2,7 +2,7 @@
 
 import numpy as np
 from sklearn.preprocessing import StandardScaler
-from procesamiento_image import process_all_images
+from procesamiento_image import process_all_images, gestionar_cache
 from Training_ANFIS import train_anfis
 from prediccion_analisis import (
     generar_reporte_completo,
@@ -13,10 +13,13 @@ from prediccion_analisis import (
 )
 from analisis import AnalizadorReglasANFIS
 
-def cargar_datos_train_test(train_dir="./archive/Training", test_dir="./archive/test"):
-    """Carga características sin normalizar y aplica StandardScaler solo una vez usando train."""
-    X_train, y_train = process_all_images(base_dir=train_dir)
-    X_test,  y_test  = process_all_images(base_dir=test_dir)
+def cargar_datos_train_test(train_dir="./archive/binaria/Training", test_dir="./archive/binaria/Testing", use_cache=True):
+    """Carga características usando sistema de caché"""
+    print(" Cargando datos de entrenamiento...")
+    X_train, y_train = process_all_images(base_dir=train_dir, normalize=False, use_cache=use_cache)
+    
+    print(" Cargando datos de prueba...")
+    X_test,  y_test  = process_all_images(base_dir=test_dir, normalize=False, use_cache=use_cache)
 
     if X_train.size == 0:
         raise RuntimeError(f"No hay imágenes extraídas en {train_dir}. Revisa rutas y extensiones.")
@@ -32,7 +35,7 @@ def cargar_datos_train_test(train_dir="./archive/Training", test_dir="./archive/
     X_train = scaler.fit_transform(X_train)
 
     if X_test.size == 0:
-        print(f"⚠️ ADVERTENCIA: No hay imágenes en {test_dir}. Se devuelve X_test vacío.")
+        print(f"ADVERTENCIA: No hay imágenes en {test_dir}. Se devuelve X_test vacío.")
         X_test = np.zeros((0, X_train.shape[1]))
     else:
         X_test = scaler.transform(X_test)
@@ -40,9 +43,9 @@ def cargar_datos_train_test(train_dir="./archive/Training", test_dir="./archive/
     return X_train, y_train, X_test, y_test
 
 
-def entrenar_y_evaluar():
+def entrenar_y_evaluar(use_cache=True):
     """Pipeline completo de entrenamiento y evaluación en test"""
-    X_train, y_train, X_test, y_test = cargar_datos_train_test()
+    X_train, y_train, X_test, y_test = cargar_datos_train_test(use_cache=use_cache)
     
     # Entrenar ANFIS
     mf_opt, theta_opt = train_anfis(X_train, y_train, swarmsize=30, maxiter=10)
@@ -68,9 +71,9 @@ def entrenar_y_evaluar():
         "comparacion_clases_test": comparacion
     }
 
-def ejemplo_prediccion_individual(idx=0):
+def ejemplo_prediccion_individual(idx=0, use_cache=True):
     """Predicción explicada de un caso específico del test"""
-    X_train, y_train, X_test, y_test = cargar_datos_train_test()
+    X_train, y_train, X_test, y_test = cargar_datos_train_test(use_cache=use_cache)
     mf_opt, theta_opt = train_anfis(X_train, y_train, swarmsize=30, maxiter=10)
     
     x_sample = X_test[idx]
@@ -91,23 +94,30 @@ def ejemplo_prediccion_individual(idx=0):
 
 def menu_interactivo():
     print("\n==== MENÚ ANFIS - VALIDACIÓN CON TEST ====")
-    print("1. Entrenar y evaluar pipeline completo")
-    print("2. Predicción explicada de un caso individual")
-    print("3. Salir")
+    print("1. Entrenar y evaluar pipeline completo (con caché)")
+    print("2. Entrenar y evaluar pipeline completo (sin caché)")
+    print("3. Predicción explicada de un caso individual")
+    print("4. Gestionar caché de características")
+    print("5. Salir")
     
-    opcion = input("Ingresa opción (1-3): ").strip()
-    if opcion=="1":
-        resultados = entrenar_y_evaluar()
+    opcion = input("Ingresa opción (1-5): ").strip()
+    if opcion == "1":
+        resultados = entrenar_y_evaluar(use_cache=True)
         print("\n✅ Pipeline completo ejecutado. Revisa las gráficas y reportes generados.")
-    elif opcion=="2":
+    elif opcion == "2":
+        resultados = entrenar_y_evaluar(use_cache=False)
+        print("\n✅ Pipeline completo ejecutado (sin caché). Revisa las gráficas y reportes generados.")
+    elif opcion == "3":
         idx = int(input("Ingresa índice de muestra del test: "))
         ejemplo_prediccion_individual(idx)
-    elif opcion=="3":
-        print("👋 Saliendo...")
+    elif opcion == "4":
+        gestionar_cache()
+    elif opcion == "5":
+        print("Saliendo...")
         return
     else:
         print("Opción inválida")
     menu_interactivo()
 
-if __name__=="__main__":
+if __name__ == "__main__":
     menu_interactivo()

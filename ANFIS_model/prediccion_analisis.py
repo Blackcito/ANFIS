@@ -16,7 +16,7 @@ def crear_carpeta_resultados():
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     carpeta = f"Resultados_ANFIS_{timestamp}"
     os.makedirs(carpeta, exist_ok=True)
-    print(f"\n📂 Todos los resultados se guardarán en: {carpeta}")
+    print(f"\n Todos los resultados se guardarán en: {carpeta}")
     return carpeta
 
 
@@ -88,7 +88,7 @@ def generar_reporte_completo(X_train, y_train, mf_opt, theta_opt, save_plots=Tru
     y_cont, y_pred = predict_sugeno(X_train, mf_opt, theta_opt)
     
     # 2. Métricas de evaluación
-    print("\n📊 MÉTRICAS DE EVALUACIÓN:")
+    print("\n MÉTRICAS DE EVALUACIÓN:")
     print("-" * 30)
     print("\nReporte de Clasificación:")
     print(classification_report(y_train, y_pred, 
@@ -147,7 +147,7 @@ def generar_reporte_completo(X_train, y_train, mf_opt, theta_opt, save_plots=Tru
         plt.show()
     
     # 4. Análisis de reglas ANFIS
-    print("\n🔍 ANÁLISIS DE REGLAS ANFIS:")
+    print("\n ANÁLISIS DE REGLAS ANFIS:")
     print("-" * 30)
     
     analizador = AnalizadorReglasANFIS(mf_opt, theta_opt, X_train, y_train)
@@ -174,7 +174,7 @@ def generar_reporte_completo(X_train, y_train, mf_opt, theta_opt, save_plots=Tru
         print(f"   Importancia: {regla['importancia_total']:.4f}")
     
     # 5. Ejemplo de predicción explicada
-    print("\n🔎 EJEMPLO DE PREDICCIÓN EXPLICADA:")
+    print("\n EJEMPLO DE PREDICCIÓN EXPLICADA:")
     print("-" * 35)
     
     # Tomar una muestra aleatoria
@@ -234,9 +234,9 @@ def analizar_casos_especificos(X_data, y_data, mf_opt, theta_opt,
         
         explicacion = predict_con_explicacion(muestra, mf_opt, theta_opt, n_top_reglas=3)
         
-        print(f"\n📋 CASO #{i+1} (Muestra #{idx}):")
-        print(f"Etiqueta real: {'🔴 Tumor' if etiqueta_real == 1 else '🟢 No Tumor'}")
-        print(f"Predicción: {'🔴 Tumor' if explicacion['prediccion_binaria'] == 1 else '🟢 No Tumor'}")
+        print(f"\n CASO #{i+1} (Muestra #{idx}):")
+        print(f"Etiqueta real: {' Tumor' if etiqueta_real == 1 else ' No Tumor'}")
+        print(f"Predicción: {' Tumor' if explicacion['prediccion_binaria'] == 1 else ' No Tumor'}")
         print(f"Confianza: {explicacion['prediccion_continua']:.4f}")
         
         # Mostrar valores de características
@@ -268,7 +268,7 @@ def comparar_predicciones_por_clase(X_data, y_data, mf_opt, theta_opt):
     """
     Compara qué reglas son más activas para cada clase (tumor vs no tumor)
     """
-    print("\n📊 COMPARACIÓN DE REGLAS POR CLASE:")
+    print("\n COMPARACIÓN DE REGLAS POR CLASE:")
     print("-" * 40)
     
     # Separar datos por clase
@@ -301,7 +301,7 @@ def comparar_predicciones_por_clase(X_data, y_data, mf_opt, theta_opt):
     nombres_caracteristicas = ['Contraste', 'ASM', 'Homogeneidad', 
                               'Energía', 'Media', 'Entropía', 'Varianza']
     
-    print("\n🔴 Top 5 reglas más activas para TUMOR:")
+    print("\n Top 5 reglas más activas para TUMOR:")
     for i, regla_idx in enumerate(top_tumor_indices[:5]):
         condiciones = []
         for j, etiqueta in enumerate(reglas[regla_idx]):
@@ -311,7 +311,7 @@ def comparar_predicciones_por_clase(X_data, y_data, mf_opt, theta_opt):
         print(f"     Activación no-tumor: {activaciones_no_tumor[regla_idx]:.4f}")
         print(f"     Diferencia: +{diferencia_activaciones[regla_idx]:.4f}")
     
-    print("\n🟢 Top 5 reglas más activas para NO TUMOR:")
+    print("\n Top 5 reglas más activas para NO TUMOR:")
     for i, regla_idx in enumerate(top_no_tumor_indices[:5]):
         condiciones = []
         for j, etiqueta in enumerate(reglas[regla_idx]):
@@ -390,49 +390,49 @@ def ejecutar_analisis_completo_mejorado():
     """
     Función principal que ejecuta todo el análisis completo mejorado
     """
-    print("🚀 INICIANDO ANÁLISIS COMPLETO DE ANFIS")
+    print(" INICIANDO ANÁLISIS COMPLETO DE ANFIS")
     print("=" * 50)
     
     # 1. Preprocesar imágenes y extraer características
-    print("📊 Extrayendo características GLCM...")
+    print(" Extrayendo características GLCM...")
     X_train, y_train = process_all_images()
     
     # 2. Entrenar el modelo ANFIS-Sugeno
-    print("🧠 Entrenando modelo ANFIS...")
+    print(" Entrenando modelo ANFIS...")
     mf_opt, theta_opt = train_anfis(X_train, y_train, swarmsize=30, maxiter=15)
     
     # 3. Generar reporte completo con análisis de reglas
-    print("📋 Generando reporte completo...")
+    print(" Generando reporte completo...")
     resultados = generar_reporte_completo(X_train, y_train, mf_opt, theta_opt, save_plots=True)
     
     # 4. Analizar casos específicos
-    print("🔍 Analizando casos específicos...")
+    print(" Analizando casos específicos...")
     casos_especificos = analizar_casos_especificos(X_train, y_train, mf_opt, theta_opt, n_casos=5)
     
     # 5. Comparar reglas por clase
-    print("⚖️ Comparando reglas por clase...")
+    print(" Comparando reglas por clase...")
     comparacion = comparar_predicciones_por_clase(X_train, y_train, mf_opt, theta_opt)
     
   
     
     # 7. Resumen final
     print("\n" + "="*60)
-    print("✅ ANÁLISIS COMPLETO FINALIZADO")
+    print(" ANÁLISIS COMPLETO FINALIZADO")
     print("="*60)
     
-    print(f"📊 Precisión del modelo: {resultados['metricas']['precision']:.4f}")
-    print(f"🎯 Sensibilidad: {resultados['metricas']['sensitivity']:.4f}")
-    print(f"🛡️ Especificidad: {resultados['metricas']['specificity']:.4f}")
-    print(f"📈 F1-Score: {resultados['metricas']['f1_score']:.4f}")
+    print(f" Precisión del modelo: {resultados['metricas']['precision']:.4f}")
+    print(f" Sensibilidad: {resultados['metricas']['sensitivity']:.4f}")
+    print(f" Especificidad: {resultados['metricas']['specificity']:.4f}")
+    print(f" F1-Score: {resultados['metricas']['f1_score']:.4f}")
     if resultados['metricas']['auc']:
-        print(f"📊 AUC-ROC: {resultados['metricas']['auc']:.4f}")
+        print(f" AUC-ROC: {resultados['metricas']['auc']:.4f}")
     
-    print(f"\n📁 Archivos generados:")
+    print(f"\n Archivos generados:")
     print("  - analisis_reglas_anfis/ (carpeta con análisis detallado)")
     print("  - evaluacion_modelo.png (métricas del modelo)")
     print("  - reglas_discriminativas.png (reglas más importantes)")
     
-    print(f"\n🔍 Top 3 reglas más importantes globalmente:")
+    print(f"\n Top 3 reglas más importantes globalmente:")
     for i, regla in enumerate(resultados['analisis_reglas']['top_reglas'][:3]):
         print(f"  {i+1}. Regla {regla['regla_idx']} - Importancia: {regla['importancia_total']:.4f}")
     
@@ -448,7 +448,7 @@ if __name__ == "__main__":
     # Ejecutar análisis completo
     resultados_completos = ejecutar_analisis_completo_mejorado()
     
-    print("\n🎉 ¡Análisis terminado! Revisa los archivos generados para más detalles.")
+    print("\n ¡Análisis terminado! Revisa los archivos generados para más detalles.")
     print("\nPara análisis adicionales, puedes usar:")
     print("- resultados_completos['modelo'] para acceder al modelo entrenado")
     print("- resultados_completos['resultados']['analisis_reglas'] para datos de reglas")
