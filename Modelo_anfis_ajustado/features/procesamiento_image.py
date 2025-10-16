@@ -8,6 +8,11 @@ import sys
 from skimage.feature import graycomatrix, graycoprops
 from sklearn.preprocessing import StandardScaler
 
+
+# Importar configuración y caché
+from config.configuracion import config
+from utils.cache import sistema_cache
+
 def save_step_image(output_dir, stage, filename, image, save_images=True):
     if not save_images or image is None:
         return
@@ -86,8 +91,7 @@ def extract_glcm_features(i, image, save_dir=None, filename=None,
     return np.array([contrast, asm, homogeneity, energy, mean, entropy, variance])
 
 
-def process_all_images(base_dir="./archive/test_2", save_dir="./debug_images", 
-                      save_images=False, normalize=False, use_cache=True):
+def process_all_images(base_dir=None, save_dir=None, save_images=None, normalize=None, use_cache=None):
     """
     Procesa imágenes con sistema de caché simple para características
     
@@ -98,36 +102,34 @@ def process_all_images(base_dir="./archive/test_2", save_dir="./debug_images",
         normalize: Si normaliza características
         use_cache: Si usa caché para acelerar procesamiento
     """
-    cache_dir = "./features_cache"
-    # Crear nombre único basado en el directorio
-    base_name = os.path.basename(os.path.normpath(base_dir))
-    cache_file = os.path.join(cache_dir, f"{base_name}_features.npz")
-    
+    # Usar valores de configuración si no se proporcionan
+    base_dir = config.directorio_entrenamiento
+    save_dir = config.procesamiento.directorio_imagenes_intermedias
+    save_images = config.procesamiento.guardar_imagenes_intermedias
+    normalize = config.procesamiento.normalizar_caracteristicas
+    use_cache = config.cache.usar_cache_caracteristicas
+
+    print(f"🖼️ Procesando imágenes con configuración:")
+    print(f"   Directorio: {base_dir}")
+    print(f"   Guardar imágenes: {save_images}")
+    print(f"   Usar cache: {use_cache}")
+    print(f"   Normalizar: {normalize}")
+
     # 1. Intentar cargar desde caché
-    if use_cache and os.path.exists(cache_file):
-        print(f" Cargando características desde caché: {cache_file}")
-        try:
-            data = np.load(cache_file)
-            features = data['features']
-            labels = data['labels']
+    if use_cache:
+        features, labels = sistema_cache.cargar_caracteristicas(base_dir)
+        if features is not None and len(features) > 0:
+            print(f" Características cargadas desde caché: {len(features)} muestras")
             
-            # Verificación básica: el archivo no está vacío
-            if len(features) > 0 and len(labels) > 0:
-                print(f"   - {len(features)} muestras cargadas")
-                
-                if normalize:
-                    scaler = StandardScaler()
-                    features = scaler.fit_transform(features)
-                    print("   - Características normalizadas")
-                
-                return features, labels
-            else:
-                print(" Caché vacío, reprocesando...")
-        except Exception as e:
-            print(f" Error cargando caché: {e}, reprocesando...")
+            if normalize:
+                scaler = StandardScaler()
+                features = scaler.fit_transform(features)
+                print("   - Características normalizadas")
+            
+            return features, labels
     
     # 2. Si no hay caché válido, procesar imágenes
-    print("🔄 Procesando imágenes desde disco...")
+    print(" Procesando imágenes desde disco...")
     
     patterns_to_try = [
         (os.path.join(base_dir, "meningioma", "Tr-me_*.jpg"),
@@ -182,48 +184,16 @@ def process_all_images(base_dir="./archive/test_2", save_dir="./debug_images",
     
     # 3. Guardar en caché si se solicita
     if use_cache:
-        os.makedirs(cache_dir, exist_ok=True)
-        np.savez(cache_file, features=features, labels=labels)
-        print(f" Características guardadas en caché: {cache_file}")
-        print(f"   - {len(features)} muestras")
-        print(f"   - Tamaño: {os.path.getsize(cache_file) / 1024 / 1024:.2f} MB")
+        sistema_cache.guardar_caracteristicas(base_dir, features, labels)
+        print(f" Características guardadas en caché")
     
-    # 4. Aplicar normalización si se solicita
+    # 4. Aplicar normalización
     if normalize:
         scaler = StandardScaler()
         features = scaler.fit_transform(features)
-        print("   - Características normalizadas")
+        print(" Características normalizadas")
     
     return features, labels
-
-
-# Función para gestionar caché desde main.py
-def gestionar_cache():
-    """Gestiona archivos de caché de características"""
-    cache_dir = "./features_cache"
-    if not os.path.exists(cache_dir):
-        print(" No hay archivos de caché")
-        return
-    
-    archivos = os.listdir(cache_dir)
-    print(f"\n Archivos en caché ({len(archivos)}):")
-    for archivo in archivos:
-        ruta = os.path.join(cache_dir, archivo)
-        tamaño = os.path.getsize(ruta) / 1024 / 1024  # MB
-        # Cargar metadata básica
-        try:
-            data = np.load(ruta)
-            muestras = len(data['features'])
-            print(f"  - {archivo} ({muestras} muestras, {tamaño:.2f} MB)")
-        except:
-            print(f"  - {archivo} (corrupto, {tamaño:.2f} MB)")
-    
-    if archivos:
-        opcion = input("\n¿Limpiar caché? (s/n): ").strip().lower()
-        if opcion == 's':
-            for archivo in archivos:
-                os.remove(os.path.join(cache_dir, archivo))
-            print(" Caché limpiado")
 
 
 if __name__ == "__main__":

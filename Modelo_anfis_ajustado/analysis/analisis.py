@@ -7,6 +7,10 @@ from core.anfis_sugeno import compute_weights, n_vars, reglas
 import warnings
 warnings.filterwarnings('ignore')
 
+# Importar configuración y caché
+from config.configuracion import config
+from utils.cache import sistema_cache
+
 # Configuración para español
 plt.rcParams['font.size'] = 10
 plt.rcParams['figure.figsize'] = (12, 8)
@@ -31,6 +35,7 @@ class AnalizadorReglasANFIS:
         self.reglas = list(product(['bajo', 'alto'], repeat=n_vars))
         self.activaciones_reglas = []
         self.importancia_reglas = []
+        self.top_reglas = config.analisis.top_reglas_mostrar
         
     def calcular_activaciones_globales(self):
         """
@@ -287,40 +292,67 @@ class AnalizadorReglasANFIS:
         plt.show()
         return fig, importancia_por_caracteristica
     
-    def generar_analisis_completo(self, carpeta_salida="analisis_anfis"):
+    def generar_analisis_completo(self, carpeta_salida=None):
         """
         Genera análisis completo con todos los gráficos y reportes
         """
+
+        carpeta_salida = config.analisis.directorio_analisis
+
         import os
         if not os.path.exists(carpeta_salida):
             os.makedirs(carpeta_salida)
         
         print("Generando análisis completo de reglas ANFIS...")
         
-        # 1. Reporte textual
+        # 1. Reporte textual (guardar en caché si está configurado)
         reporte_path = os.path.join(carpeta_salida, "reporte_reglas.txt")
-        reporte = self.generar_reporte_textual(n_top=20, archivo_salida=reporte_path)
+        reporte = self.generar_reporte_textual(n_top=self.top_reglas, archivo_salida=reporte_path)
         
-        # 2. Gráfico de importancia
-        importancia_path = os.path.join(carpeta_salida, "importancia_reglas.png")
-        self.graficar_importancia_reglas(n_top=15, save_path=importancia_path)
+        if config.cache.usar_cache_resultados and config.analisis.guardar_reportes:
+            sistema_cache.guardar_reporte("reporte_reglas", reporte)
         
-        # 3. Mapa de calor
-        mapa_calor_path = os.path.join(carpeta_salida, "mapa_calor_reglas.png")
-        self.crear_mapa_calor_reglas(n_top=12, save_path=mapa_calor_path)
+        # 2. Gráfico de importancia (guardar en caché)
+        if config.analisis.guardar_graficos:
+            importancia_path = os.path.join(carpeta_salida, "importancia_reglas.png")
+            fig_importancia = self.graficar_importancia_reglas(
+                n_top=self.top_reglas, 
+                save_path=importancia_path
+            )
+            
+            if config.cache.usar_cache_resultados:
+                sistema_cache.guardar_grafico("importancia_reglas", fig_importancia)
         
-        # 4. Análisis de características
-        caracteristicas_path = os.path.join(carpeta_salida, "importancia_caracteristicas.png")
-        fig_caract, imp_caract = self.analizar_contribucion_caracteristicas(save_path=caracteristicas_path)
+        # 3. Mapa de calor (guardar en caché)
+        if config.analisis.guardar_graficos:
+            mapa_calor_path = os.path.join(carpeta_salida, "mapa_calor_reglas.png")
+            fig_mapa = self.crear_mapa_calor_reglas(
+                n_top=min(12, self.top_reglas), 
+                save_path=mapa_calor_path
+            )
+            
+            if config.cache.usar_cache_resultados:
+                sistema_cache.guardar_grafico("mapa_calor_reglas", fig_mapa)
         
-        # 5. Crear CSV con datos de reglas
-        self.exportar_datos_reglas(os.path.join(carpeta_salida, "datos_reglas.csv"))
+        # 4. Análisis de características (guardar en caché)
+        if config.analisis.guardar_graficos:
+            caracteristicas_path = os.path.join(carpeta_salida, "importancia_caracteristicas.png")
+            fig_caract, imp_caract = self.analizar_contribucion_caracteristicas(
+                save_path=caracteristicas_path
+            )
+            
+            if config.cache.usar_cache_resultados:
+                sistema_cache.guardar_grafico("importancia_caracteristicas", fig_caract)
         
-        print(f"\nAnálisis completo guardado en la carpeta: {carpeta_salida}")
+        # 5. Exportar datos (guardar en caché)
+        datos_path = os.path.join(carpeta_salida, "datos_reglas.csv")
+        self.exportar_datos_reglas(datos_path)
+        
+        print(f"✅ Análisis completo guardado en: {carpeta_salida}")
         
         return {
             'reporte_texto': reporte,
-            'top_reglas': self.obtener_top_reglas(20),
+            'top_reglas': self.obtener_top_reglas(self.top_reglas),
             'importancia_caracteristicas': imp_caract
         }
     

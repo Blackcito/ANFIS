@@ -1,0 +1,30 @@
+{
+  "directorios": {
+    "entrenamiento": "D:/Codigos/Tesis/ANFIS/archive/binaria/Training",
+    "prueba": "D:/Codigos/Tesis/ANFIS/archive/binaria/Testing"
+  },
+  "procesamiento": {
+    "guardar_imagenes_intermedias": false,
+    "directorio_imagenes_intermedias": "D:\\Codigos\\Tesis\\ANFIS\\Modelo_anfis_ajustado\\debug_images",
+    "usar_cache_imagenes": true,
+    "normalizar_caracteristicas": true
+  },
+  "entrenamiento": {
+    "tamano_enjambre": 30,
+    "max_iteraciones": 10,
+    "guardar_modelo": true,
+    "nombre_modelo": "modelo_anfis"
+  },
+  "cache": {
+    "usar_cache_caracteristicas": true,
+    "usar_cache_modelos": true,
+    "usar_cache_resultados": true,
+    "limpiar_cache_automatico": false
+  },
+  "analisis": {
+    "top_reglas_mostrar": 15,
+    "guardar_graficos": true,
+    "guardar_reportes": true,
+    "directorio_analisis": "D:\\Codigos\\Tesis\\ANFIS\\Modelo_anfis_ajustado\\analisis_reglas_anfis"
+  }
+}

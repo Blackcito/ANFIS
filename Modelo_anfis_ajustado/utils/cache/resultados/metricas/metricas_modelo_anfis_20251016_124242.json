@@ -1,0 +1,7 @@
+{
+  "sensitivity": 1.0,
+  "specificity": 1.0,
+  "precision": 1.0,
+  "f1_score": 1.0,
+  "auc": 1.0
+}
