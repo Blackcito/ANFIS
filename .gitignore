@@ -11,7 +11,5 @@ __pycache__/
 */__pycache__/
 
 # Carpetas específicas
-modelos_pruebas/
-Mamdani_Model/
-ANFIS_model/
-ANFIS_model_3_cate/
+build
+dist

@@ -109,13 +109,14 @@ def pipeline_completo(use_cache=None, entrenar_nuevo=False):
     print(f"F1-Score: {metricas['f1_score']:.4f}")
     if metricas['auc'] > 0:
         print(f"AUC-ROC: {metricas['auc']:.4f}")
-
+    print("\n" + "="*60)
     # Mostrar estadísticas de caché
     stats = sistema_cache.obtener_estadisticas_cache()
     print(f"\nEstadisticas de cache:")
+    print("\n" + "="*60)
     for tipo, datos in stats.items():
         print(f"  {tipo}: {datos['archivos']} archivos ({datos['tamaño_mb']} MB)")
-
+    print("\n" + "="*60)
     return {
         "modelo": modelo,
         "evaluacion": resultados_eval
@@ -270,6 +271,8 @@ if __name__ == "__main__":
     print("2. Menu Consola")
     
     opcion = input("Seleccione opcion (1-2): ").strip()
+    
+    
     
     if opcion == "1":
         if not ejecutar_desde_interfaz():

@@ -1,13 +1,13 @@
 {
   "directorios": {
-    "entrenamiento": "D:/Codigos/Tesis/ANFIS/archive/binaria/Training",
-    "prueba": "D:/Codigos/Tesis/ANFIS/archive/binaria/Testing"
+    "entrenamiento": "/home/kuroned/ANFIS/archive/binaria/Train_1",
+    "prueba": "/home/kuroned/ANFIS/archive/binaria/test_1"
   },
   "procesamiento": {
     "guardar_imagenes_intermedias": false,
-    "directorio_imagenes_intermedias": "D:\\Codigos\\Tesis\\ANFIS\\Modelo_anfis_ajustado\\debug_images",
+    "directorio_imagenes_intermedias": "/home/kuroned/ANFIS/Modelo_anfis_ajustado/debug_images",
     "usar_cache_imagenes": true,
-    "normalizar_caracteristicas": true
+    "normalizar_caracteristicas": false
   },
   "entrenamiento": {
     "tamano_enjambre": 30,
@@ -25,6 +25,6 @@
     "top_reglas_mostrar": 15,
     "guardar_graficos": true,
     "guardar_reportes": true,
-    "directorio_analisis": "D:\\Codigos\\Tesis\\ANFIS\\Modelo_anfis_ajustado\\analisis_reglas_anfis"
+    "directorio_analisis": "/home/kuroned/ANFIS/Modelo_anfis_ajustado/analisis_reglas_anfis"
   }
 }

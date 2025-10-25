@@ -1,0 +1,19 @@
+{
+  "fecha_entrenamiento": "20251024_185939",
+  "nombre_modelo": "modelo_anfis",
+  "forma_mf_params": [
+    14,
+    2
+  ],
+  "forma_theta": [
+    1024
+  ],
+  "metricas": {},
+  "info_entrenamiento": {
+    "swarmsize": 30,
+    "maxiter": 10,
+    "error_final": 6.224332908176182e-27,
+    "n_muestras_entrenamiento": 52,
+    "n_caracteristicas": 7
+  }
+}

@@ -1,4 +1,5 @@
-# --- sólo las funciones relevantes con flag para guardar ---
+# features/procesamiento_image.py - CORREGIDO
+
 import os
 import cv2
 import numpy as np
@@ -7,7 +8,7 @@ import time
 import sys
 from skimage.feature import graycomatrix, graycoprops
 from sklearn.preprocessing import StandardScaler
-
+from datetime import timedelta
 
 # Importar configuración y caché
 from config.configuracion import config
@@ -24,7 +25,6 @@ def save_step_image(output_dir, stage, filename, image, save_images=True):
         image_to_save = image
     out_path = os.path.join(out_dir, filename)
     cv2.imwrite(out_path, image_to_save)
-
 
 def preprocess_image(i, image_path, save_dir=None, save_images=False):
     img = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
@@ -54,7 +54,6 @@ def preprocess_image(i, image_path, save_dir=None, save_images=False):
         save_step_image(save_dir, "04_mask", img_name, seg_mask, save_images)
 
     return {"enhanced": enhanced, "segmentation_mask": seg_mask}
-
 
 def extract_glcm_features(i, image, save_dir=None, filename=None,
                           distances=[1, 2, 3], angles=[0, np.pi/4, np.pi/2, 3*np.pi/4],
@@ -90,7 +89,6 @@ def extract_glcm_features(i, image, save_dir=None, filename=None,
 
     return np.array([contrast, asm, homogeneity, energy, mean, entropy, variance])
 
-
 def process_all_images(base_dir=None, save_dir=None, save_images=None, normalize=None, use_cache=None):
     """
     Procesa imágenes con sistema de caché simple para características
@@ -102,14 +100,19 @@ def process_all_images(base_dir=None, save_dir=None, save_images=None, normalize
         normalize: Si normaliza características
         use_cache: Si usa caché para acelerar procesamiento
     """
-    # Usar valores de configuración si no se proporcionan
-    base_dir = config.directorio_entrenamiento
-    save_dir = config.procesamiento.directorio_imagenes_intermedias
-    save_images = config.procesamiento.guardar_imagenes_intermedias
-    normalize = config.procesamiento.normalizar_caracteristicas
-    use_cache = config.cache.usar_cache_caracteristicas
+    # CORRECCIÓN: Usar parámetros si se proporcionan, sino usar configuración
+    if base_dir is None:
+        base_dir = config.directorio_entrenamiento
+    if save_dir is None:
+        save_dir = config.procesamiento.directorio_imagenes_intermedias
+    if save_images is None:
+        save_images = config.procesamiento.guardar_imagenes_intermedias
+    if normalize is None:
+        normalize = config.procesamiento.normalizar_caracteristicas
+    if use_cache is None:
+        use_cache = config.cache.usar_cache_caracteristicas
 
-    print(f"🖼️ Procesando imágenes con configuración:")
+    print(f" Procesando imágenes con configuración:")
     print(f"   Directorio: {base_dir}")
     print(f"   Guardar imágenes: {save_images}")
     print(f"   Usar cache: {use_cache}")
@@ -161,7 +164,7 @@ def process_all_images(base_dir=None, save_dir=None, save_images=None, normalize
         try:
             if i % 100 == 0:
                 elapsed = time.time() - start_time
-                print(f"  Imagen {i+1}/{len(image_paths)} - {elapsed:.2f}s")
+                print(f" Progreso: {i+1}/{len(image_paths)} imágenes ({timedelta(seconds=int(elapsed))})")
                 sys.stdout.flush()
 
             processed_img = preprocess_image(i, path, save_dir=save_dir, save_images=save_images)
@@ -171,13 +174,12 @@ def process_all_images(base_dir=None, save_dir=None, save_images=None, normalize
             labels.append(1 if "meningioma" in path.lower() else 0)
         except Exception as e:
             error_count += 1
-            print(f"\nERROR en imagen {i+1}: {path}")
-            print(f"  {str(e)}")
-            print("  Saltando imagen...")
+            print(f" Error en imagen {i+1}: {os.path.basename(path)} - {str(e)}")
             continue
 
-    print(f"\nProcesamiento completado. Errores: {error_count}/{len(image_paths)}")
-    print(f"Tiempo total: {time.time() - start_time:.2f} segundos")
+    print(f" Procesamiento completado: {len(features)} éxitos, {error_count} errores")
+    total_time = time.time() - start_time
+    print(f" Tiempo total: {timedelta(seconds=int(total_time))}")
 
     # Convertir a array
     features = np.array(features) if features else np.zeros((0,7))
@@ -194,7 +196,6 @@ def process_all_images(base_dir=None, save_dir=None, save_images=None, normalize
         print(" Características normalizadas")
     
     return features, labels
-
 
 if __name__ == "__main__":
     # Ejemplos de uso:

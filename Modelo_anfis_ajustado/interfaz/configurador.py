@@ -72,9 +72,7 @@ class Configurador:
         
         self.categorias = [
             ("Directorios", self.mostrar_directorios),
-            ("Procesamiento", self.mostrar_procesamiento),
             ("Entrenamiento", self.mostrar_entrenamiento),
-            ("Cache", self.mostrar_cache),
             ("Analisis", self.mostrar_analisis)
         ]
         
@@ -137,19 +135,23 @@ class Configurador:
             return entry
     
     def mostrar_directorios(self):
+        """Solo directorios, sin opciones de cache"""
         self.limpiar_contenido()
         ttk.Label(self.contenido_frame, text="Configuracion de Directorios", 
-                 font=('Arial', 12, 'bold')).pack(anchor=tk.W, pady=(0, 15))
+                font=('Arial', 12, 'bold')).pack(anchor=tk.W, pady=(0, 15))
         
         frame = ttk.Frame(self.contenido_frame)
         frame.pack(fill=tk.BOTH, expand=True)
         frame.columnconfigure(1, weight=1)
         
-        # Usar variables ya inicializadas
         self.crear_campo_entrada(frame, 0, "Directorio de Entrenamiento:", 
                                 self.dir_entrenamiento, 'directorio')
         self.crear_campo_entrada(frame, 1, "Directorio de Prueba:", 
                                 self.dir_prueba, 'directorio')
+        
+        # INFO: Cache se controla desde ventana principal
+        ttk.Label(frame, text="Nota: El uso de cache se controla desde la ventana principal", 
+                foreground='gray', font=('Arial', 9)).grid(row=2, column=0, columnspan=2, pady=10)
     
     def mostrar_procesamiento(self):
         self.limpiar_contenido()

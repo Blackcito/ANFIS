@@ -14,7 +14,7 @@ class ConfiguracionProcesamiento:
     guardar_imagenes_intermedias: bool = False
     directorio_imagenes_intermedias: str = os.path.join(BASE_DIR, "debug_images")
     usar_cache_imagenes: bool = True
-    normalizar_caracteristicas: bool = True
+    normalizar_caracteristicas: bool = False
 
 @dataclass
 class ConfiguracionEntrenamiento:
@@ -45,8 +45,8 @@ class ConfiguracionGlobal:
     
     def __init__(self):
         # Rutas relativas al directorio del proyecto
-        self.directorio_entrenamiento = os.path.join(BASE_DIR, "../archive/binaria/test_1")
-        self.directorio_prueba = os.path.join(BASE_DIR, "../archive/binaria/test_1")
+        self.directorio_entrenamiento = os.path.join(BASE_DIR, "../archive/binaria/Training")
+        self.directorio_prueba = os.path.join(BASE_DIR, "../archive/binaria/Testing")
         
         # Módulos de configuración
         self.procesamiento = ConfiguracionProcesamiento()

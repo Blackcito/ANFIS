@@ -1,8 +1,11 @@
+# analysis/evaluador.py - CORREGIR
+
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.metrics import classification_report, confusion_matrix, roc_curve, auc
 from core.prediction import predict_sugeno
+import os
 
 # Importar configuración y caché
 from config.configuracion import config
@@ -62,7 +65,7 @@ class EvaluadorANFIS:
             roc_auc = 0
             print("  No se puede calcular ROC (solo una clase presente)")
         
-        # Preparar resultados antes de generar graficos
+        # Preparar resultados
         resultados_eval = {
             'metricas': {
                 'sensitivity': sensitivity,
@@ -76,13 +79,10 @@ class EvaluadorANFIS:
             'reporte_clasificacion': reporte
         }
         
-        # Graficos
+        # Graficos - CORREGIDO: Usar sistema de archivos del proyecto
         if save_plots:
             fig = self._generar_graficos_evaluacion(cm, fpr, tpr, roc_auc, y_cont, y_pred)
-            # Guardar grafico en cache si esta configurado
-            if config.cache.usar_cache_resultados and fig is not None:
-                sistema_cache.guardar_grafico("evaluacion_completa", fig)
-        
+            
         # Guardar metricas en cache si esta configurado
         if config.cache.usar_cache_resultados:
             sistema_cache.guardar_metricas(
@@ -93,7 +93,7 @@ class EvaluadorANFIS:
         return resultados_eval
     
     def _generar_graficos_evaluacion(self, cm, fpr, tpr, roc_auc, y_cont, y_pred):
-        """Genera graficos de evaluacion completos"""
+        """Genera graficos de evaluacion completos - CORREGIDO"""
         fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(15, 12))
         
         # 1. Matriz de Confusion
@@ -122,7 +122,6 @@ class EvaluadorANFIS:
             ax2.set_title('Curva ROC (No disponible)', fontweight='bold')
         
         # 3. Distribucion de predicciones
-        # Verificar que hay datos para ambas clases
         if len(np.unique(self.y)) > 1:
             ax3.hist(y_cont[self.y == 0], alpha=0.7, label='No Tumor', bins=20, color='blue')
             ax3.hist(y_cont[self.y == 1], alpha=0.7, label='Tumor', bins=20, color='red')
@@ -135,15 +134,14 @@ class EvaluadorANFIS:
         ax3.legend()
         ax3.grid(True, alpha=0.3)
         
-        # 4. Metricas de rendimiento - CALCULAR DESDE MATRIZ DE CONFUSION
-        if cm.size >= 4:  # Matriz 2x2
+        # 4. Metricas de rendimiento
+        if cm.size >= 4:
             tn, fp, fn, tp = cm.ravel()
             sensitivity = tp / (tp + fn) if (tp + fn) > 0 else 0
             specificity = tn / (tn + fp) if (tn + fp) > 0 else 0
             precision = tp / (tp + fp) if (tp + fp) > 0 else 0
             f1 = 2 * (precision * sensitivity) / (precision + sensitivity) if (precision + sensitivity) > 0 else 0
         else:
-            # Caso donde solo hay una clase
             sensitivity = specificity = precision = f1 = 0
         
         metricas = ['Sensibilidad', 'Especificidad', 'Precision', 'F1-Score']
@@ -161,7 +159,19 @@ class EvaluadorANFIS:
                     f'{valor:.3f}', ha='center', va='bottom')
         
         plt.tight_layout()
-        plt.savefig('evaluacion_completa_modelo.png', dpi=300, bbox_inches='tight')
+        
+        # CORRECCIÓN: Guardar en el sistema de caché en lugar de directorio actual
+        if config.analisis.guardar_graficos:
+            # Guardar en directorio de análisis
+            os.makedirs(config.analisis.directorio_analisis, exist_ok=True)
+            ruta_analisis = os.path.join(config.analisis.directorio_analisis, "evaluacion_completa_modelo.png")
+            plt.savefig(ruta_analisis, dpi=300, bbox_inches='tight')
+            print(f"✅ Gráfico de evaluación guardado en: {ruta_analisis}")
+            
+            # También guardar en caché si está configurado
+            if config.cache.usar_cache_resultados:
+                sistema_cache.guardar_grafico("evaluacion_completa", fig)
+        
         plt.show()
         
         return fig

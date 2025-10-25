@@ -14,3 +14,9 @@ Ejemplo de características normalizadas:
  [-0.04144054 -0.07756204  0.37020185 -0.09134232  0.04144054 -0.07756204
    0.37737691 -0.13538839 -0.30280746 -0.13815997 -0.4401282  -0.61693969
   -1.25171841  1.23763151 -0.04144054]
+
+  feedback etapa 3
+  
+  1- explicar el daño de la imagen, dar detalles, poner que tipo de tumor
+  2- clasificar los tumores a corde a oms, snc u otros
+  3- revisar tensor flo, keras y hacer comaprativas

@@ -122,7 +122,7 @@ class SistemaCache:
         with open(ruta_metadatos, 'w', encoding='utf-8') as f:
             json.dump(metadatos, f, indent=2, ensure_ascii=False)
         
-        print(f"✅ Modelo guardado: {ruta_modelo}")
+        print(f" Modelo guardado: {ruta_modelo}")
         return ruta_modelo
     
     def cargar_modelo(self, ruta_modelo=None, nombre_modelo=None):
@@ -326,7 +326,7 @@ class SistemaCache:
         
         archivos_npz = [f for f in os.listdir(modelos_dir) if f.endswith('.npz')]
         
-        print(f"\n📂 Modelos entrenados guardados ({len(archivos_npz)}):")
+        print(f"\n Modelos entrenados guardados ({len(archivos_npz)}):")
         for archivo in sorted(archivos_npz):
             ruta_completa = os.path.join(modelos_dir, archivo)
             tamaño = os.path.getsize(ruta_completa) / 1024  # KB

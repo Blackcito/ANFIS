@@ -4,6 +4,7 @@ import time
 import numpy as np
 from pyswarm import pso
 from core.anfis_sugeno import compute_weights, solve_sugeno_params, init_mf_params, n_vars, reglas
+from datetime import timedelta
 
 # Importar el sistema de caché centralizado
 from utils.cache import sistema_cache
@@ -41,7 +42,8 @@ def train_anfis(X_train, y_train, swarmsize=50, maxiter=20, guardar_modelo=True,
     opt_flat, opt_err = pso(error_func, mins, maxs,
                             swarmsize=swarmsize, maxiter=maxiter,
                             phip=1.5, phig=2.0, omega=0.5)
-    print(f" PSO completo en {time.time()-start:.1f}s, error={opt_err:.4f}")
+    elapsed_pso = time.time() - start
+    print(f" PSO completo en {timedelta(seconds=int(elapsed_pso))}, error={opt_err:.4f}")
 
     # 5) Reconstruir parámetros finales
     mf_opt = opt_flat.reshape((-1,2))
