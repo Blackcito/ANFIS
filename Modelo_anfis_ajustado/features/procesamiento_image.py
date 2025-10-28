@@ -20,7 +20,7 @@ def save_step_image(output_dir, stage, filename, image, save_images=True):
     out_dir = os.path.join(output_dir, stage)
     os.makedirs(out_dir, exist_ok=True)
     if image.dtype != np.uint8:
-        image_to_save = cv2.normalize(image, None, 0, 255, cv2.NORM_MINMAX).astype(np.uint8)
+        image_to_save = cv2.normalize(image, None, 0, 255, cv2.NORM_MINMAX).astype(np.uint8) 
     else:
         image_to_save = image
     out_path = os.path.join(out_dir, filename)
@@ -89,73 +89,60 @@ def extract_glcm_features(i, image, save_dir=None, filename=None,
 
     return np.array([contrast, asm, homogeneity, energy, mean, entropy, variance])
 
-def process_all_images(base_dir=None, save_dir=None, save_images=None, normalize=None, use_cache=None):
+def process_all_images(tumor_dir=None, notumor_dir=None, save_dir=None, save_images=None):
     """
     Procesa imágenes con sistema de caché simple para características
     
     Args:
-        base_dir: Directorio con las imágenes
+        tumor_dir: Directorio con las imágenes de tumor
+        notumor_dir: Directorio con las imágenes de no tumor
         save_dir: Directorio para guardar imágenes de debug
         save_images: Si guarda imágenes intermedias
-        normalize: Si normaliza características
-        use_cache: Si usa caché para acelerar procesamiento
     """
     # CORRECCIÓN: Usar parámetros si se proporcionan, sino usar configuración
-    if base_dir is None:
-        base_dir = config.directorio_entrenamiento
-    if save_dir is None:
-        save_dir = config.procesamiento.directorio_imagenes_intermedias
     if save_images is None:
         save_images = config.procesamiento.guardar_imagenes_intermedias
-    if normalize is None:
-        normalize = config.procesamiento.normalizar_caracteristicas
-    if use_cache is None:
-        use_cache = config.cache.usar_cache_caracteristicas
 
     print(f" Procesando imágenes con configuración:")
-    print(f"   Directorio: {base_dir}")
+    print(f"   Directorio tumor: {tumor_dir}")
+    print(f"   Directorio no-tumor: {notumor_dir}")
     print(f"   Guardar imágenes: {save_images}")
-    print(f"   Usar cache: {use_cache}")
-    print(f"   Normalizar: {normalize}")
 
-    # 1. Intentar cargar desde caché
-    if use_cache:
-        features, labels = sistema_cache.cargar_caracteristicas(base_dir)
-        if features is not None and len(features) > 0:
-            print(f" Características cargadas desde caché: {len(features)} muestras")
-            
-            if normalize:
-                scaler = StandardScaler()
-                features = scaler.fit_transform(features)
-                print("   - Características normalizadas")
-            
-            return features, labels
-    
     # 2. Si no hay caché válido, procesar imágenes
     print(" Procesando imágenes desde disco...")
     
-    patterns_to_try = [
-        (os.path.join(base_dir, "meningioma", "Tr-me_*.jpg"),
-         os.path.join(base_dir, "notumor", "Tr-no_*.jpg")),
-        (os.path.join(base_dir, "meningioma", "Te-me_*.jpg"),
-         os.path.join(base_dir, "notumor", "Te-no_*.jpg")),
-        (os.path.join(base_dir, "meningioma", "*.jpg"),
-         os.path.join(base_dir, "notumor", "*.jpg")),
-        (os.path.join(base_dir, "meningioma", "*.[jJ][pP][gG]"),
-         os.path.join(base_dir, "notumor", "*.[jJ][pP][gG]"))
-    ]
-
     image_paths = []
-    for meningioma_pattern, notumor_pattern in patterns_to_try:
-        if not image_paths:
-            image_paths = glob.glob(meningioma_pattern) + glob.glob(notumor_pattern)
+    labels = []
+
+    # Buscar imágenes en directorio de tumor
+    if tumor_dir and os.path.exists(tumor_dir):
+        tumor_patterns = ["*.jpg", "*.jpeg", "*.JPG", "*.JPEG"]
+        for pattern in tumor_patterns:
+            tumor_paths = glob.glob(os.path.join(tumor_dir, pattern))
+            for path in tumor_paths:
+                image_paths.append(path)
+                labels.append(1)  # 1 = tumor
+
+    # Buscar imágenes en directorio de no-tumor
+    if notumor_dir and os.path.exists(notumor_dir):
+        notumor_patterns = ["*.jpg", "*.jpeg", "*.JPG", "*.JPEG"]
+        for pattern in notumor_patterns:
+            notumor_paths = glob.glob(os.path.join(notumor_dir, pattern))
+            for path in notumor_paths:
+                image_paths.append(path)
+                labels.append(0)  # 0 = no tumor
 
     if len(image_paths) == 0:
-        print(f"\n ADVERTENCIA: No se encontraron imágenes en {base_dir}")
+        print("\n ADVERTENCIA: No se encontraron imágenes en los directorios especificados")
         return np.zeros((0, 7)), []
 
+    # Ordenar paths para tener un orden consistente
+    image_paths_with_labels = list(zip(image_paths, labels))
+    image_paths_with_labels.sort(key=lambda x: x[0])  # Ordenar por path
+    image_paths, labels = zip(*image_paths_with_labels)
+    image_paths, labels = list(image_paths), list(labels)
+
     features = []
-    labels = []
     error_count = 0
     start_time = time.time()
 
@@ -171,7 +158,6 @@ def process_all_images(base_dir=None, save_dir=None, save_images=None, normalize
             fname = os.path.basename(path)
             glcm_features = extract_glcm_features(i, processed_img, save_dir=save_dir, filename=fname, save_images=save_images)
             features.append(glcm_features)
-            labels.append(1 if "meningioma" in path.lower() else 0)
         except Exception as e:
             error_count += 1
             print(f" Error en imagen {i+1}: {os.path.basename(path)} - {str(e)}")
@@ -181,25 +167,25 @@ def process_all_images(base_dir=None, save_dir=None, save_images=None, normalize
     total_time = time.time() - start_time
     print(f" Tiempo total: {timedelta(seconds=int(total_time))}")
 
-    # Convertir a array
+    # Convertir a arrays numpy y verificar dimensiones
     features = np.array(features) if features else np.zeros((0,7))
-    
-    # 3. Guardar en caché si se solicita
-    if use_cache:
-        sistema_cache.guardar_caracteristicas(base_dir, features, labels)
-        print(f" Características guardadas en caché")
-    
-    # 4. Aplicar normalización
-    if normalize:
-        scaler = StandardScaler()
-        features = scaler.fit_transform(features)
-        print(" Características normalizadas")
-    
+    labels = np.array(labels)
+
+    # Debug: imprimir dimensiones
+    print(f"\nDimensiones de los datos:")
+    print(f" - Features shape: {features.shape}")
+    print(f" - Labels shape: {labels.shape}")
+    print(f" - Tipos de datos: features={features.dtype}, labels={labels.dtype}")
+
+    if len(features) != len(labels):
+        raise ValueError(f"Dimensiones incompatibles: {len(features)} features vs {len(labels)} labels")
+
     return features, labels
 
 if __name__ == "__main__":
     # Ejemplos de uso:
-    # Con caché (recomendado):
-    X, y = process_all_images(base_dir="./archive/test_2", use_cache=True)
-    # Sin caché (forzar reprocesamiento):
-    # X, y = process_all_images(base_dir="./archive/test_2", use_cache=False)
+    # Con rutas explícitas para tumor y no-tumor:
+    X, y = process_all_images(
+        tumor_dir="./archive/test_2/tumor",
+        notumor_dir="./archive/test_2/notumor"
+    )

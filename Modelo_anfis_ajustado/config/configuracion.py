@@ -1,52 +1,47 @@
-# config/configuracion.py - AJUSTADO
+# config/configuracion.py - VERSIÓN SIMPLIFICADA
 
-import os
 import json
 from dataclasses import dataclass, asdict
-from typing import Dict, Any
-
-# Obtener el directorio base del proyecto (Modelo_anfis_ajustado)
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+from config.rutas import sistema_rutas
 
 @dataclass
+class ConfiguracionCache:
+    guardar_cache_caracteristicas: bool = True
+    guardar_cache_modelos: bool = True
+    guardar_cache_graficos: bool = True
+    guardar_cache_metricas: bool = True
+    guardar_cache_reportes: bool = True
+    guardar_cache_datos_reglas: bool = True
+
+@dataclass 
 class ConfiguracionProcesamiento:
-    """Configuración para el procesamiento de imágenes"""
     guardar_imagenes_intermedias: bool = False
-    directorio_imagenes_intermedias: str = os.path.join(BASE_DIR, "debug_images")
-    usar_cache_imagenes: bool = True
+    directorio_imagenes_intermedias: str = str(sistema_rutas.persist_dir / "imagenes_intermedias")
     normalizar_caracteristicas: bool = False
 
 @dataclass
 class ConfiguracionEntrenamiento:
-    """Configuración para el entrenamiento del modelo"""
     tamano_enjambre: int = 30
     max_iteraciones: int = 10
     guardar_modelo: bool = True
     nombre_modelo: str = "modelo_anfis"
 
 @dataclass
-class ConfiguracionCache:
-    """Configuración para el sistema de caché"""
-    usar_cache_caracteristicas: bool = True
-    usar_cache_modelos: bool = True
-    usar_cache_resultados: bool = True
-    limpiar_cache_automatico: bool = False
-
-@dataclass
 class ConfiguracionAnalisis:
-    """Configuración para el análisis de resultados"""
     top_reglas_mostrar: int = 15
-    guardar_graficos: bool = True
+    guardar_metricas: bool = True
     guardar_reportes: bool = True
-    directorio_analisis: str = os.path.join(BASE_DIR, "analisis_reglas_anfis")
+    guardar_datos_reglas: bool = True
+    guardar_graficos_analisis: bool = True
+    directorio_analisis: str = str(sistema_rutas.persist_dir / "analisis")
 
 class ConfiguracionGlobal:
-    """Configuración global del sistema ANFIS"""
-    
     def __init__(self):
-        # Rutas relativas al directorio del proyecto
-        self.directorio_entrenamiento = os.path.join(BASE_DIR, "../archive/binaria/Training")
-        self.directorio_prueba = os.path.join(BASE_DIR, "../archive/binaria/Testing")
+        # Directorios de datos (configurables por usuario)
+        self.directorio_entrenamiento_tumor = ""
+        self.directorio_entrenamiento_notumor = ""
+        self.directorio_prueba_tumor = ""
+        self.directorio_prueba_notumor = ""
         
         # Módulos de configuración
         self.procesamiento = ConfiguracionProcesamiento()
@@ -54,70 +49,73 @@ class ConfiguracionGlobal:
         self.cache = ConfiguracionCache()
         self.analisis = ConfiguracionAnalisis()
         
-        # Archivo de configuración dentro del proyecto
-        self.archivo_config = os.path.join(BASE_DIR, "config", "configuracion.json")
+        # Archivo de configuración
+        self.archivo_config = sistema_rutas.obtener_ruta_configuracion()
+        
+        # Cargar configuración existente
+        self.cargar_configuracion()
     
     def guardar_configuracion(self):
-        """Guarda la configuración actual en un archivo JSON"""
-        os.makedirs(os.path.dirname(self.archivo_config), exist_ok=True)
-        
-        config_dict = {
-            'directorios': {
-                'entrenamiento': self.directorio_entrenamiento,
-                'prueba': self.directorio_prueba
-            },
-            'procesamiento': asdict(self.procesamiento),
-            'entrenamiento': asdict(self.entrenamiento),
-            'cache': asdict(self.cache),
-            'analisis': asdict(self.analisis)
-        }
-        
-        with open(self.archivo_config, 'w', encoding='utf-8') as f:
-            json.dump(config_dict, f, indent=2, ensure_ascii=False)
-        
-        print(f"✅ Configuración guardada en: {self.archivo_config}")
+        """Guarda la configuración en archivo persistente"""
+        try:
+            config_dict = {
+                'directorios': {
+                    'entrenamiento_tumor': self.directorio_entrenamiento_tumor,
+                    'entrenamiento_notumor': self.directorio_entrenamiento_notumor,
+                    'prueba_tumor': self.directorio_prueba_tumor,
+                    'prueba_notumor': self.directorio_prueba_notumor,
+                },
+                'procesamiento': asdict(self.procesamiento),
+                'entrenamiento': asdict(self.entrenamiento),
+                'cache': asdict(self.cache),
+                'analisis': asdict(self.analisis)
+            }
+            
+            with open(self.archivo_config, 'w', encoding='utf-8') as f:
+                json.dump(config_dict, f, indent=2, ensure_ascii=False)
+            
+            print(f" Configuración guardada en: {self.archivo_config}")
+            return True
+            
+        except Exception as e:
+            print(f" Error guardando configuración: {e}")
+            return False
     
     def cargar_configuracion(self):
-        """Carga la configuración desde un archivo JSON"""
-        if os.path.exists(self.archivo_config):
+        """Carga la configuración desde archivo persistente"""
+        if self.archivo_config.exists():
             try:
                 with open(self.archivo_config, 'r', encoding='utf-8') as f:
                     config_dict = json.load(f)
                 
                 # Cargar directorios
                 if 'directorios' in config_dict:
-                    self.directorio_entrenamiento = config_dict['directorios'].get('entrenamiento', self.directorio_entrenamiento)
-                    self.directorio_prueba = config_dict['directorios'].get('prueba', self.directorio_prueba)
+                    dirs = config_dict['directorios']
+                    self.directorio_entrenamiento_tumor = dirs.get('entrenamiento_tumor', self.directorio_entrenamiento_tumor)
+                    self.directorio_entrenamiento_notumor = dirs.get('entrenamiento_notumor', self.directorio_entrenamiento_notumor)
+                    self.directorio_prueba_tumor = dirs.get('prueba_tumor', self.directorio_prueba_tumor)
+                    self.directorio_prueba_notumor = dirs.get('prueba_notumor', self.directorio_prueba_notumor)
                 
                 # Cargar módulos
-                if 'procesamiento' in config_dict:
-                    for key, value in config_dict['procesamiento'].items():
-                        if hasattr(self.procesamiento, key):
-                            setattr(self.procesamiento, key, value)
+                for modulo, clase in [
+                    ('procesamiento', self.procesamiento),
+                    ('entrenamiento', self.entrenamiento), 
+                    ('cache', self.cache),
+                    ('analisis', self.analisis)
+                ]:
+                    if modulo in config_dict:
+                        for key, value in config_dict[modulo].items():
+                            if hasattr(clase, key):
+                                setattr(clase, key, value)
                 
-                if 'entrenamiento' in config_dict:
-                    for key, value in config_dict['entrenamiento'].items():
-                        if hasattr(self.entrenamiento, key):
-                            setattr(self.entrenamiento, key, value)
-                
-                if 'cache' in config_dict:
-                    for key, value in config_dict['cache'].items():
-                        if hasattr(self.cache, key):
-                            setattr(self.cache, key, value)
-                
-                if 'analisis' in config_dict:
-                    for key, value in config_dict['analisis'].items():
-                        if hasattr(self.analisis, key):
-                            setattr(self.analisis, key, value)
-                
-                print(f"✅ Configuración cargada desde: {self.archivo_config}")
+                print(f" Configuración cargada desde: {self.archivo_config}")
                 return True
                 
             except Exception as e:
-                print(f"❌ Error cargando configuración: {e}")
+                print(f" Error cargando configuración: {e}")
         
-        print("ℹ️ No se encontró archivo de configuración, usando valores por defecto")
+        print("No se encontró archivo de configuración, usando valores por defecto")
         return False
 
-# Instancia global de configuración
+# Instancia global
 config = ConfiguracionGlobal()

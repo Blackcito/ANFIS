@@ -1,8 +1,9 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import seaborn as sns
+import json
 from itertools import product
+
 from core.anfis_sugeno import compute_weights, n_vars, reglas
 import warnings
 warnings.filterwarnings('ignore')
@@ -19,12 +20,6 @@ class AnalizadorReglasANFIS:
     def __init__(self, mf_params, theta, X_data, y_data):
         """
         Inicializa el analizador de reglas ANFIS
-        
-        Args:
-            mf_params: Parámetros de funciones de membresía optimizados
-            theta: Parámetros del consecuente Sugeno
-            X_data: Datos de entrada (características GLCM)
-            y_data: Etiquetas verdaderas
         """
         self.mf_params = mf_params
         self.theta = theta
@@ -36,6 +31,7 @@ class AnalizadorReglasANFIS:
         self.activaciones_reglas = []
         self.importancia_reglas = []
         self.top_reglas = config.analisis.top_reglas_mostrar
+        self.ultimas_metricas_clasificacion = {}
         
     def calcular_activaciones_globales(self):
         """
@@ -143,7 +139,7 @@ class AnalizadorReglasANFIS:
         
         return reporte_texto
     
-    def graficar_importancia_reglas(self, n_top=15, save_path=None):
+    def graficar_importancia_reglas(self, n_top=15, save_path=None, visualizar_graficos=True):
         """
         Crea gráfico de barras con las reglas más importantes
         """
@@ -184,15 +180,17 @@ class AnalizadorReglasANFIS:
                     f'{val:.3f}', ha='center', va='bottom', fontsize=8)
         
         plt.tight_layout()
-        
         if save_path:
             plt.savefig(save_path, dpi=300, bbox_inches='tight')
             print(f"Gráfico guardado en: {save_path}")
-        
-        plt.show()
+        if visualizar_graficos:
+            try:
+                plt.show()
+            except Exception:
+                pass
         return fig
     
-    def crear_mapa_calor_reglas(self, n_top=10, save_path=None):
+    def crear_mapa_calor_reglas(self, n_top=10, save_path=None, visualizar_graficos=True):
         """
         Crea un mapa de calor mostrando las condiciones de las reglas más importantes
         """
@@ -244,31 +242,25 @@ class AnalizadorReglasANFIS:
         cbar.set_ticklabels(['BAJO', 'ALTO'])
         
         plt.tight_layout()
-        
         if save_path:
             plt.savefig(save_path, dpi=300, bbox_inches='tight')
             print(f"Mapa de calor guardado en: {save_path}")
-        
-        plt.show()
+        if visualizar_graficos:
+            try:
+                plt.show()
+            except Exception:
+                pass
         return fig
-    
-    def analizar_contribucion_caracteristicas(self, save_path=None):
+    def analizar_contribucion_caracteristicas(self, save_path=None, visualizar_graficos=True):
         """
         Analiza qué características son más importantes globalmente
         """
-        if len(self.importancia_reglas) == 0:
-            self.calcular_importancia_reglas()
-        
-        # Calcular importancia por característica
-        importancia_por_caracteristica = np.zeros(n_vars)
-        
-        for regla in self.importancia_reglas:
-            params_abs = np.abs(regla['parametros_consecuente'])
-            importancia_por_caracteristica += params_abs * regla['activacion_media']
-        
-        # Crear gráfico
+        # Delegar el cálculo a un método dedicado y luego plotear si corresponde
+        importancia_por_caracteristica = self.calcular_importancia_por_caracteristica()
+
+        # Crear gráfico usando la información ya calculada
         fig, ax = plt.subplots(figsize=(10, 6))
-        
+
         bars = ax.bar(self.nombres_caracteristicas, importancia_por_caracteristica, 
                      color='green', alpha=0.7)
         ax.set_title('Importancia Global por Característica GLCM', 
@@ -277,92 +269,168 @@ class AnalizadorReglasANFIS:
         ax.set_ylabel('Importancia Acumulada')
         ax.tick_params(axis='x', rotation=45)
         ax.grid(True, alpha=0.3)
-        
+
         # Añadir valores en las barras
         for bar, val in zip(bars, importancia_por_caracteristica):
             ax.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.01,
                    f'{val:.3f}', ha='center', va='bottom', fontsize=10)
-        
+
         plt.tight_layout()
-        
         if save_path:
             plt.savefig(save_path, dpi=300, bbox_inches='tight')
             print(f"Gráfico de características guardado en: {save_path}")
-        
-        plt.show()
+        if visualizar_graficos:
+            try:
+                plt.show()
+            except Exception:
+                pass
         return fig, importancia_por_caracteristica
+
+    def calcular_importancia_por_caracteristica(self):
+        """
+        Calcula y retorna la importancia acumulada por característica a partir de
+        `self.importancia_reglas`. No realiza plotting; puede usarse independientemente
+        del flag de guardar gráficos.
+        """
+        if len(self.importancia_reglas) == 0:
+            self.calcular_importancia_reglas()
+
+        importancia_por_caracteristica = np.zeros(n_vars)
+
+        for regla in self.importancia_reglas:
+            params_abs = np.abs(regla['parametros_consecuente'])
+            importancia_por_caracteristica += params_abs * regla['activacion_media']
+
+        return importancia_por_caracteristica
     
-    def generar_analisis_completo(self, carpeta_salida=None):
+    def generar_analisis_completo(self, carpeta_salida=None, guardar_graficos_analisis=None, guardar_graficos_cache=None, visualizar_graficos=True):
         """
-        Genera análisis completo con todos los gráficos y reportes
+        Genera análisis completo con todos los gráficos y reportes - ACTUALIZADO
         """
-
         carpeta_salida = config.analisis.directorio_analisis
-
+        datos_csv = None
+        datos_txt = None
+        
         import os
         if not os.path.exists(carpeta_salida):
             os.makedirs(carpeta_salida)
         
         print("Generando análisis completo de reglas ANFIS...")
         
-        # 1. Reporte textual (guardar en caché si está configurado)
-        reporte_path = os.path.join(carpeta_salida, "reporte_reglas.txt")
-        reporte = self.generar_reporte_textual(n_top=self.top_reglas, archivo_salida=reporte_path)
-        
-        if config.cache.usar_cache_resultados and config.analisis.guardar_reportes:
-            sistema_cache.guardar_reporte("reporte_reglas", reporte)
-        
-        # 2. Gráfico de importancia (guardar en caché)
-        if config.analisis.guardar_graficos:
+    
+        # 2. Gráficos de análisis (carpeta análisis)
+        fig_importancia = None
+        fig_mapa = None
+        fig_caract = None
+        if guardar_graficos_analisis:
             importancia_path = os.path.join(carpeta_salida, "importancia_reglas.png")
             fig_importancia = self.graficar_importancia_reglas(
                 n_top=self.top_reglas, 
-                save_path=importancia_path
+                save_path=importancia_path,
+                visualizar_graficos=visualizar_graficos
             )
-            
-            if config.cache.usar_cache_resultados:
-                sistema_cache.guardar_grafico("importancia_reglas", fig_importancia)
-        
-        # 3. Mapa de calor (guardar en caché)
-        if config.analisis.guardar_graficos:
             mapa_calor_path = os.path.join(carpeta_salida, "mapa_calor_reglas.png")
             fig_mapa = self.crear_mapa_calor_reglas(
                 n_top=min(12, self.top_reglas), 
-                save_path=mapa_calor_path
+                save_path=mapa_calor_path,
+                visualizar_graficos=visualizar_graficos
             )
-            
-            if config.cache.usar_cache_resultados:
-                sistema_cache.guardar_grafico("mapa_calor_reglas", fig_mapa)
-        
-        # 4. Análisis de características (guardar en caché)
-        if config.analisis.guardar_graficos:
             caracteristicas_path = os.path.join(carpeta_salida, "importancia_caracteristicas.png")
             fig_caract, imp_caract = self.analizar_contribucion_caracteristicas(
-                save_path=caracteristicas_path
+                save_path=caracteristicas_path,
+                visualizar_graficos=visualizar_graficos
             )
-            
-            if config.cache.usar_cache_resultados:
+        else:
+            # Siempre calcular la métrica aunque no se guarde el gráfico
+            imp_caract = self.calcular_importancia_por_caracteristica()
+            # Mostrar los gráficos aunque no se guarden
+            fig_importancia = self.graficar_importancia_reglas(n_top=self.top_reglas, visualizar_graficos=visualizar_graficos)
+            fig_mapa = self.crear_mapa_calor_reglas(n_top=min(12, self.top_reglas), visualizar_graficos=visualizar_graficos)
+            fig_caract, _ = self.analizar_contribucion_caracteristicas(visualizar_graficos=visualizar_graficos)
+
+        # 3. Guardar en cache si corresponde
+        if guardar_graficos_cache:
+            if fig_importancia is not None:
+                sistema_cache.guardar_grafico("importancia_reglas", fig_importancia)
+            if fig_mapa is not None:
+                sistema_cache.guardar_grafico("mapa_calor_reglas", fig_mapa)
+            if fig_caract is not None:
                 sistema_cache.guardar_grafico("importancia_caracteristicas", fig_caract)
+
+        ####### Guardado de reportes, métricas y datos ####
+
+        # 1. Generar contenidos
+        reporte = self.generar_reporte_textual(n_top=self.top_reglas)
+        datos_csv, datos_txt = self.exportar_datos_reglas()
+        valores_metricas = imp_caract.tolist() if hasattr(imp_caract, 'tolist') else list(imp_caract)
         
-        # 5. Exportar datos (guardar en caché)
-        datos_path = os.path.join(carpeta_salida, "datos_reglas.csv")
-        self.exportar_datos_reglas(datos_path)
+        # Preparar métricas unificadas
+        metricas = {
+            'analisis_reglas': {
+                'importancia_caracteristicas': valores_metricas,
+                'nombres_caracteristicas': self.nombres_caracteristicas
+            }
+        }
         
-        print(f"✅ Análisis completo guardado en: {carpeta_salida}")
+        # Agregar métricas de clasificación si están disponibles
+        if self.ultimas_metricas_clasificacion:
+            metricas.update(self.ultimas_metricas_clasificacion)
+
+        # Guardar métricas unificadas en memoria para el pipeline
+        self.metricas_unificadas = metricas
+
+        # 2. Guardar en carpeta de análisis si está configurado
+        if config.analisis.guardar_reportes:
+            reporte_path = os.path.join(carpeta_salida, "reporte_reglas.txt")
+            with open(reporte_path, 'w', encoding='utf-8') as f:
+                f.write(reporte)
+                
+        if config.analisis.guardar_metricas:
+            metricas_path = os.path.join(carpeta_salida, "metricas.json")
+            with open(metricas_path, 'w', encoding='utf-8') as f:
+                json.dump(metricas, f, indent=2)
+
+        if config.analisis.guardar_datos_reglas:
+            datos_base = os.path.join(carpeta_salida, "datos_reglas")
+            with open(datos_base + ".csv", 'w', encoding='utf-8') as f:
+                f.write(datos_csv)
+            with open(datos_base + ".txt", 'w', encoding='utf-8') as f:
+                f.write(datos_txt)
+
+        # 3. Guardar en caché si está configurado
+        if config.cache.guardar_cache_reportes:
+            sistema_cache.guardar_reporte("reporte_reglas", reporte)
+            
+        if config.cache.guardar_cache_metricas:
+            # Guardar métricas unificadas en caché usando el nombre del modelo
+            # para evitar crear dos ficheros distintos.
+            try:
+                sistema_cache.guardar_metricas(config.entrenamiento.nombre_modelo, metricas)
+                print("guardando metricas en cache... (unificadas)")
+            except Exception as e:
+                print(f"Error guardando metricas en cache: {e}")
+            
+        if config.cache.guardar_cache_datos_reglas:
+            sistema_cache.guardar_datos_reglas("analisis", datos_csv, datos_txt)
         
+        print(f" Análisis completo guardado en: {carpeta_salida}")
+
         return {
-            'reporte_texto': reporte,
+            'reporte_texto': reporte if config.analisis.guardar_reportes else "No generado",
             'top_reglas': self.obtener_top_reglas(self.top_reglas),
-            'importancia_caracteristicas': imp_caract
+            'importancia_caracteristicas': imp_caract,
+            'graficos_generados': guardar_graficos_analisis
         }
     
-    def exportar_datos_reglas(self, archivo_csv):
+    def exportar_datos_reglas(self, archivo_salida=None):
         """
-        Exporta datos de todas las reglas a CSV para análisis posterior
+        Genera y opcionalmente exporta los datos de las reglas en formatos CSV y TXT.
+        Retorna una tupla con el contenido CSV y TXT generado.
         """
         if len(self.importancia_reglas) == 0:
             self.calcular_importancia_reglas()
-        
+
+        # Generar DataFrame
         datos_export = []
         for regla in self.importancia_reglas:
             fila = {
@@ -372,20 +440,58 @@ class AnalizadorReglasANFIS:
                 'importancia_total': regla['importancia_total'],
                 'bias': regla['bias']
             }
-            
-            # Añadir condiciones
             for i, condicion in enumerate(regla['regla_condicion']):
                 fila[f'{self.nombres_caracteristicas[i]}_condicion'] = condicion
-            
-            # Añadir parámetros del consecuente
             for i, param in enumerate(regla['parametros_consecuente']):
                 fila[f'{self.nombres_caracteristicas[i]}_parametro'] = param
-            
             datos_export.append(fila)
         
         df = pd.DataFrame(datos_export)
-        df.to_csv(archivo_csv, index=False)
-        print(f"Datos de reglas exportados a: {archivo_csv}")
+        
+        # Generar contenido CSV
+        contenido_csv = df.to_csv(index=False)
+        
+        # Generar contenido TXT formateado
+        lineas_txt = []
+        lineas_txt.append("="*80)
+        lineas_txt.append("DATOS DETALLADOS DE REGLAS ANFIS")
+        lineas_txt.append("="*80 + "\n")
+        
+        for _, fila in df.iterrows():
+            lineas_txt.append(f"Regla {fila['regla_idx']}:")
+            lineas_txt.append(f"  Activación media: {fila['activacion_media']:.4f}")
+            lineas_txt.append(f"  Magnitud parámetros: {fila['magnitud_parametros']:.4f}")
+            lineas_txt.append(f"  Importancia total: {fila['importancia_total']:.4f}")
+            lineas_txt.append(f"  Bias: {fila['bias']:.4f}")
+            lineas_txt.append("  Condiciones:")
+            for nombre in self.nombres_caracteristicas:
+                cond_col = f"{nombre}_condicion"
+                if cond_col in fila:
+                    lineas_txt.append(f"    - {nombre}: {fila[cond_col]}")
+            lineas_txt.append("  Parámetros:")
+            for nombre in self.nombres_caracteristicas:
+                param_col = f"{nombre}_parametro"
+                if param_col in fila:
+                    lineas_txt.append(f"    - {nombre}: {fila[param_col]:.4f}")
+            lineas_txt.append("\n" + "-"*50 + "\n")
+            
+        contenido_txt = "\n".join(lineas_txt)
+
+        # Si se proporciona ruta, guardar archivos
+        if archivo_salida:
+            ruta_csv = archivo_salida if archivo_salida.endswith('.csv') else archivo_salida + '.csv'
+            ruta_txt = archivo_salida if archivo_salida.endswith('.txt') else archivo_salida + '.txt'
+            
+            with open(ruta_csv, 'w', encoding='utf-8') as f:
+                f.write(contenido_csv)
+            with open(ruta_txt, 'w', encoding='utf-8') as f:
+                f.write(contenido_txt)
+                
+            print(f"Datos exportados en:\n  CSV: {ruta_csv}\n  TXT: {ruta_txt}")
+
+        # Retornar contenidos generados
+        return contenido_csv, contenido_txt
+
 
 
 # Función de uso fácil

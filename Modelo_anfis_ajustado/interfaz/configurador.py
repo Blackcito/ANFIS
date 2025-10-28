@@ -1,4 +1,4 @@
-# interfaz/configurador.py - CORREGIDO
+# interfaz/configurador.py - COMPLETAMENTE CORREGIDO
 
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
@@ -17,41 +17,42 @@ class Configurador:
         self.root.resizable(True, True)
         
         self.config_modificada = False
-        
-        # INICIALIZAR TODAS LAS VARIABLES AL PRINCIPIO
         self.inicializar_variables()
-        
         self.crear_interfaz()
         self.cargar_configuracion_actual()
     
     def inicializar_variables(self):
-        """Inicializa todas las variables de configuración"""
+        """Inicializa SOLO las variables de configuración actuales"""
         # Directorios
-        self.dir_entrenamiento = tk.StringVar()
-        self.dir_prueba = tk.StringVar()
+        self.dir_entrenamiento_tumor = tk.StringVar()
+        self.dir_entrenamiento_notumor = tk.StringVar()
+        self.dir_prueba_tumor = tk.StringVar()
+        self.dir_prueba_notumor = tk.StringVar()
         
         # Procesamiento
         self.guardar_imagenes = tk.BooleanVar()
         self.dir_imagenes = tk.StringVar()
-        self.usar_cache_imagenes = tk.BooleanVar()
         self.normalizar_caracteristicas = tk.BooleanVar()
         
         # Entrenamiento
         self.tamano_enjambre = tk.IntVar()
         self.max_iteraciones = tk.IntVar()
-        self.guardar_modelo = tk.BooleanVar()
         self.nombre_modelo = tk.StringVar()
         
-        # Cache
-        self.usar_cache_caracteristicas = tk.BooleanVar()
-        self.usar_cache_modelos = tk.BooleanVar()
-        self.usar_cache_resultados = tk.BooleanVar()
-        self.limpiar_cache_auto = tk.BooleanVar()
+        # Cache - SOLO configuración de GUARDADO (nueva estructura)
+        self.guardar_cache_caracteristicas = tk.BooleanVar()
+        self.guardar_cache_modelos = tk.BooleanVar()
+        self.guardar_cache_graficos = tk.BooleanVar()
+        self.guardar_cache_metricas = tk.BooleanVar()
+        self.guardar_cache_reportes = tk.BooleanVar()
+        self.guardar_cache_datos_reglas = tk.BooleanVar()
         
         # Analisis
         self.top_reglas = tk.IntVar()
-        self.guardar_graficos = tk.BooleanVar()
+        self.guardar_metricas = tk.BooleanVar()
         self.guardar_reportes = tk.BooleanVar()
+        self.guardar_datos_reglas = tk.BooleanVar()
+        self.guardar_graficos_analisis = tk.BooleanVar()
         self.dir_analisis = tk.StringVar()
     
     def crear_interfaz(self):
@@ -68,12 +69,14 @@ class Configurador:
         main_paned.add(right_frame, weight=1)
         
         # ===== PANEL IZQUIERDO - NAVEGACION =====
-        ttk.Label(left_frame, text="Categorias", font=('Arial', 11, 'bold')).pack(pady=(0, 10))
+        ttk.Label(left_frame, text="Categorías", font=('Arial', 11, 'bold')).pack(pady=(0, 10))
         
         self.categorias = [
             ("Directorios", self.mostrar_directorios),
+            ("Procesamiento", self.mostrar_procesamiento),
             ("Entrenamiento", self.mostrar_entrenamiento),
-            ("Analisis", self.mostrar_analisis)
+            ("Sistema de Cache", self.mostrar_cache),
+            ("Análisis", self.mostrar_analisis)
         ]
         
         self.botones_categorias = []
@@ -93,7 +96,7 @@ class Configurador:
         self.contenido_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
         
         # Estado
-        self.estado = ttk.Label(right_frame, text="Configuracion cargada", foreground='green')
+        self.estado = ttk.Label(right_frame, text="Configuración cargada", foreground='green')
         self.estado.pack(side=tk.BOTTOM, fill=tk.X)
         
         # Mostrar primera categoria por defecto
@@ -135,98 +138,119 @@ class Configurador:
             return entry
     
     def mostrar_directorios(self):
-        """Solo directorios, sin opciones de cache"""
+        """Configuración de directorios"""
         self.limpiar_contenido()
-        ttk.Label(self.contenido_frame, text="Configuracion de Directorios", 
+        ttk.Label(self.contenido_frame, text="Configuración de Directorios", 
                 font=('Arial', 12, 'bold')).pack(anchor=tk.W, pady=(0, 15))
         
         frame = ttk.Frame(self.contenido_frame)
         frame.pack(fill=tk.BOTH, expand=True)
         frame.columnconfigure(1, weight=1)
+
+        # Sección de entrenamiento
+        ttk.Label(frame, text="Directorios de Entrenamiento", font=('Arial', 10, 'bold')).grid(
+            row=0, column=0, columnspan=2, sticky=tk.W, pady=(0, 5))
         
-        self.crear_campo_entrada(frame, 0, "Directorio de Entrenamiento:", 
-                                self.dir_entrenamiento, 'directorio')
-        self.crear_campo_entrada(frame, 1, "Directorio de Prueba:", 
-                                self.dir_prueba, 'directorio')
+        self.crear_campo_entrada(frame, 1, "Directorio de Tumor:", 
+                                self.dir_entrenamiento_tumor, 'directorio')
+        self.crear_campo_entrada(frame, 2, "Directorio de No-Tumor:", 
+                                self.dir_entrenamiento_notumor, 'directorio')
+
+        # Sección de pruebas
+        ttk.Label(frame, text="Directorios de Prueba", font=('Arial', 10, 'bold')).grid(
+            row=3, column=0, columnspan=2, sticky=tk.W, pady=(15, 5))
         
-        # INFO: Cache se controla desde ventana principal
-        ttk.Label(frame, text="Nota: El uso de cache se controla desde la ventana principal", 
-                foreground='gray', font=('Arial', 9)).grid(row=2, column=0, columnspan=2, pady=10)
+        self.crear_campo_entrada(frame, 4, "Directorio de Tumor:", 
+                                self.dir_prueba_tumor, 'directorio')
+        self.crear_campo_entrada(frame, 5, "Directorio de No-Tumor:", 
+                                self.dir_prueba_notumor, 'directorio')
     
     def mostrar_procesamiento(self):
+        """Configuración de procesamiento"""
         self.limpiar_contenido()
-        ttk.Label(self.contenido_frame, text="Configuracion de Procesamiento", 
+        ttk.Label(self.contenido_frame, text="Configuración de Procesamiento", 
                  font=('Arial', 12, 'bold')).pack(anchor=tk.W, pady=(0, 15))
         
         frame = ttk.Frame(self.contenido_frame)
         frame.pack(fill=tk.BOTH, expand=True)
         frame.columnconfigure(1, weight=1)
         
-        # Usar variables ya inicializadas
-        self.crear_campo_entrada(frame, 0, "Guardar Imagenes Intermedias:", 
+        self.crear_campo_entrada(frame, 0, "Guardar Imágenes Intermedias:", 
                                 self.guardar_imagenes, 'booleano')
-        self.crear_campo_entrada(frame, 1, "Directorio Imagenes Intermedias:", 
+        self.crear_campo_entrada(frame, 1, "Directorio Imágenes Intermedias:", 
                                 self.dir_imagenes, 'directorio')
-        self.crear_campo_entrada(frame, 2, "Usar Cache de Imagenes:", 
-                                self.usar_cache_imagenes, 'booleano')
-        self.crear_campo_entrada(frame, 3, "Normalizar Caracteristicas:", 
+        self.crear_campo_entrada(frame, 2, "Normalizar Características:", 
                                 self.normalizar_caracteristicas, 'booleano')
     
     def mostrar_entrenamiento(self):
+        """Configuración de entrenamiento"""
         self.limpiar_contenido()
-        ttk.Label(self.contenido_frame, text="Configuracion de Entrenamiento", 
+        ttk.Label(self.contenido_frame, text="Configuración de Entrenamiento", 
                  font=('Arial', 12, 'bold')).pack(anchor=tk.W, pady=(0, 15))
         
         frame = ttk.Frame(self.contenido_frame)
         frame.pack(fill=tk.BOTH, expand=True)
         frame.columnconfigure(1, weight=1)
         
-        # Usar variables ya inicializadas
-        self.crear_campo_entrada(frame, 0, "Tamano del Enjambre PSO:", 
+        self.crear_campo_entrada(frame, 0, "Tamaño del Enjambre PSO:", 
                                 self.tamano_enjambre, 'numerico', {'min': 10, 'max': 100})
-        self.crear_campo_entrada(frame, 1, "Maximo de Iteraciones:", 
+        self.crear_campo_entrada(frame, 1, "Máximo de Iteraciones:", 
                                 self.max_iteraciones, 'numerico', {'min': 5, 'max': 50})
-        self.crear_campo_entrada(frame, 2, "Guardar Modelo Automaticamente:", 
-                                self.guardar_modelo, 'booleano')
         self.crear_campo_entrada(frame, 3, "Nombre del Modelo:", 
                                 self.nombre_modelo, 'texto')
     
     def mostrar_cache(self):
+        """Configuración del sistema de caché - SOLO GUARDADO"""
         self.limpiar_contenido()
-        ttk.Label(self.contenido_frame, text="Configuracion de Cache", 
+        ttk.Label(self.contenido_frame, text="Configuración del Sistema de Caché", 
                  font=('Arial', 12, 'bold')).pack(anchor=tk.W, pady=(0, 15))
         
         frame = ttk.Frame(self.contenido_frame)
         frame.pack(fill=tk.BOTH, expand=True)
         frame.columnconfigure(1, weight=1)
         
-        # Usar variables ya inicializadas
-        self.crear_campo_entrada(frame, 0, "Usar Cache de Caracteristicas:", 
-                                self.usar_cache_caracteristicas, 'booleano')
-        self.crear_campo_entrada(frame, 1, "Usar Cache de Modelos:", 
-                                self.usar_cache_modelos, 'booleano')
-        self.crear_campo_entrada(frame, 2, "Usar Cache de Resultados:", 
-                                self.usar_cache_resultados, 'booleano')
-        self.crear_campo_entrada(frame, 3, "Limpieza Automatica de Cache:", 
-                                self.limpiar_cache_auto, 'booleano')
+        # SOLO configuración de GUARDADO
+        ttk.Label(frame, text="¿Qué se debe GUARDAR en caché?", 
+                 font=('Arial', 10, 'bold')).grid(row=0, column=0, sticky=tk.W, pady=(10, 5))
+        
+        self.crear_campo_entrada(frame, 1, "Guardar Características en Caché:", 
+                                self.guardar_cache_caracteristicas, 'booleano')
+        self.crear_campo_entrada(frame, 2, "Guardar Modelos en Caché:", 
+                                self.guardar_cache_modelos, 'booleano')
+        self.crear_campo_entrada(frame, 3, "Guardar Graficos en Caché:", 
+                                self.guardar_cache_graficos, 'booleano')
+        self.crear_campo_entrada(frame, 4, "Guardar Métricas en Caché:", 
+                                self.guardar_cache_metricas, 'booleano')
+        self.crear_campo_entrada(frame, 5, "Guardar Reportes en Caché:", 
+                                self.guardar_cache_reportes, 'booleano')
+        self.crear_campo_entrada(frame, 6, "Guardar Datos de Reglas en Caché:", 
+                                self.guardar_cache_datos_reglas, 'booleano')
+        
+        # Información
+        ttk.Label(frame, text="Nota: El USO de caché existente se controla desde la ventana principal durante la ejecución.", 
+                foreground='gray', font=('Arial', 9)).grid(row=7, column=0, columnspan=2, pady=10)
     
     def mostrar_analisis(self):
+        """Configuración de análisis"""
         self.limpiar_contenido()
-        ttk.Label(self.contenido_frame, text="Configuracion de Analisis", 
+        ttk.Label(self.contenido_frame, text="Configuración de Análisis", 
                  font=('Arial', 12, 'bold')).pack(anchor=tk.W, pady=(0, 15))
         
         frame = ttk.Frame(self.contenido_frame)
         frame.pack(fill=tk.BOTH, expand=True)
         frame.columnconfigure(1, weight=1)
         
-        # Usar variables ya inicializadas
-        self.crear_campo_entrada(frame, 0, "Numero de Reglas a Mostrar:", 
+        self.crear_campo_entrada(frame, 0, "Número de Reglas a Mostrar:", 
                                 self.top_reglas, 'numerico', {'min': 5, 'max': 50})
-        self.crear_campo_entrada(frame, 1, "Guardar Graficos:", 
-                                self.guardar_graficos, 'booleano')
+        self.crear_campo_entrada(frame, 1, "Guardar Metricas:", 
+                                self.guardar_metricas, 'booleano')
         self.crear_campo_entrada(frame, 2, "Guardar Reportes:", 
                                 self.guardar_reportes, 'booleano')
-        self.crear_campo_entrada(frame, 3, "Directorio de Analisis:", 
+        self.crear_campo_entrada(frame, 3, "Guardar Datos de Reglas:", 
+                                self.guardar_datos_reglas, 'booleano')
+        self.crear_campo_entrada(frame, 4, "Guardar Gráficos de Análisis:", 
+                                self.guardar_graficos_analisis, 'booleano')
+        self.crear_campo_entrada(frame, 5, "Directorio de Análisis:", 
                                 self.dir_analisis, 'directorio')
     
     def limpiar_contenido(self):
@@ -242,96 +266,104 @@ class Configurador:
             self.marcar_modificada()
     
     def cargar_configuracion_actual(self):
-        """Carga la configuracion actual en las variables (que ya están inicializadas)"""
+        """Carga la configuración actual en las variables - CORREGIDO"""
         # Directorios
-        self.dir_entrenamiento.set(config.directorio_entrenamiento)
-        self.dir_prueba.set(config.directorio_prueba)
+        self.dir_entrenamiento_tumor.set(config.directorio_entrenamiento_tumor)
+        self.dir_entrenamiento_notumor.set(config.directorio_entrenamiento_notumor)
+        self.dir_prueba_tumor.set(config.directorio_prueba_tumor)
+        self.dir_prueba_notumor.set(config.directorio_prueba_notumor)
         
         # Procesamiento
         self.guardar_imagenes.set(config.procesamiento.guardar_imagenes_intermedias)
         self.dir_imagenes.set(config.procesamiento.directorio_imagenes_intermedias)
-        self.usar_cache_imagenes.set(config.procesamiento.usar_cache_imagenes)
         self.normalizar_caracteristicas.set(config.procesamiento.normalizar_caracteristicas)
         
         # Entrenamiento
         self.tamano_enjambre.set(config.entrenamiento.tamano_enjambre)
         self.max_iteraciones.set(config.entrenamiento.max_iteraciones)
-        self.guardar_modelo.set(config.entrenamiento.guardar_modelo)
         self.nombre_modelo.set(config.entrenamiento.nombre_modelo)
         
-        # Cache
-        self.usar_cache_caracteristicas.set(config.cache.usar_cache_caracteristicas)
-        self.usar_cache_modelos.set(config.cache.usar_cache_modelos)
-        self.usar_cache_resultados.set(config.cache.usar_cache_resultados)
-        self.limpiar_cache_auto.set(config.cache.limpiar_cache_automatico)
+        # Cache - SOLO configuración de GUARDADO (nueva estructura)
+        self.guardar_cache_caracteristicas.set(config.cache.guardar_cache_caracteristicas)
+        self.guardar_cache_modelos.set(config.cache.guardar_cache_modelos)
+        self.guardar_cache_graficos.set(config.cache.guardar_cache_graficos)
+        self.guardar_cache_metricas.set(config.cache.guardar_cache_metricas)
+        self.guardar_cache_reportes.set(config.cache.guardar_cache_reportes)
+        self.guardar_cache_datos_reglas.set(config.cache.guardar_cache_datos_reglas)
         
         # Analisis
         self.top_reglas.set(config.analisis.top_reglas_mostrar)
-        self.guardar_graficos.set(config.analisis.guardar_graficos)
+        self.guardar_metricas.set(config.analisis.guardar_metricas)
         self.guardar_reportes.set(config.analisis.guardar_reportes)
+        self.guardar_datos_reglas.set(config.analisis.guardar_datos_reglas)
+        self.guardar_graficos_analisis.set(config.analisis.guardar_graficos_analisis)
         self.dir_analisis.set(config.analisis.directorio_analisis)
         
         self.config_modificada = False
-        self.actualizar_estado("Configuracion cargada")
+        self.actualizar_estado("Configuración cargada")
     
     def guardar_configuracion(self):
-        """Guarda la configuracion desde las variables a la configuracion global"""
+        """Guarda la configuración desde las variables a la configuración global - CORREGIDO"""
         # Directorios
-        config.directorio_entrenamiento = self.dir_entrenamiento.get()
-        config.directorio_prueba = self.dir_prueba.get()
+        config.directorio_entrenamiento_tumor = self.dir_entrenamiento_tumor.get()
+        config.directorio_entrenamiento_notumor = self.dir_entrenamiento_notumor.get()
+        config.directorio_prueba_tumor = self.dir_prueba_tumor.get()
+        config.directorio_prueba_notumor = self.dir_prueba_notumor.get()
         
         # Procesamiento
         config.procesamiento.guardar_imagenes_intermedias = self.guardar_imagenes.get()
         config.procesamiento.directorio_imagenes_intermedias = self.dir_imagenes.get()
-        config.procesamiento.usar_cache_imagenes = self.usar_cache_imagenes.get()
         config.procesamiento.normalizar_caracteristicas = self.normalizar_caracteristicas.get()
         
         # Entrenamiento
         config.entrenamiento.tamano_enjambre = self.tamano_enjambre.get()
         config.entrenamiento.max_iteraciones = self.max_iteraciones.get()
-        config.entrenamiento.guardar_modelo = self.guardar_modelo.get()
         config.entrenamiento.nombre_modelo = self.nombre_modelo.get()
         
-        # Cache
-        config.cache.usar_cache_caracteristicas = self.usar_cache_caracteristicas.get()
-        config.cache.usar_cache_modelos = self.usar_cache_modelos.get()
-        config.cache.usar_cache_resultados = self.usar_cache_resultados.get()
-        config.cache.limpiar_cache_automatico = self.limpiar_cache_auto.get()
+        # Cache - SOLO configuración de GUARDADO (nueva estructura)
+        config.cache.guardar_cache_caracteristicas = self.guardar_cache_caracteristicas.get()
+        config.cache.guardar_cache_modelos = self.guardar_cache_modelos.get()
+        config.cache.guardar_cache_graficos = self.guardar_cache_graficos.get()
+        config.cache.guardar_cache_metricas = self.guardar_cache_metricas.get()
+        config.cache.guardar_cache_reportes = self.guardar_cache_reportes.get()
+        config.cache.guardar_cache_datos_reglas = self.guardar_cache_datos_reglas.get()
         
         # Analisis
         config.analisis.top_reglas_mostrar = self.top_reglas.get()
-        config.analisis.guardar_graficos = self.guardar_graficos.get()
+        config.analisis.guardar_metricas = self.guardar_metricas.get()
         config.analisis.guardar_reportes = self.guardar_reportes.get()
+        config.analisis.guardar_datos_reglas = self.guardar_datos_reglas.get()
+        config.analisis.guardar_graficos_analisis = self.guardar_graficos_analisis.get()
         config.analisis.directorio_analisis = self.dir_analisis.get()
         
         # Guardar en archivo
         config.guardar_configuracion()
         self.config_modificada = False
-        self.actualizar_estado("Configuracion guardada exitosamente")
-        messagebox.showinfo("Configuracion", "Configuracion guardada correctamente.")
+        self.actualizar_estado("Configuración guardada exitosamente")
+        messagebox.showinfo("Configuración", "Configuración guardada correctamente.")
     
     def cargar_configuracion(self):
-        """Carga la configuracion desde archivo"""
+        """Carga la configuración desde archivo"""
         if self.config_modificada:
             if not messagebox.askyesno("Confirmar", "Hay cambios sin guardar. ¿Desea cargar de todos modos?"):
                 return
         
         config.cargar_configuracion()
         self.cargar_configuracion_actual()
-        self.actualizar_estado("Configuracion cargada desde archivo")
+        self.actualizar_estado("Configuración cargada desde archivo")
     
     def restaurar_valores_defecto(self):
         """Restaura los valores por defecto"""
-        if not messagebox.askyesno("Confirmar", "¿Restaurar valores por defecto? Se perderan los cambios no guardados."):
+        if not messagebox.askyesno("Confirmar", "¿Restaurar valores por defecto? Se perderán los cambios no guardados."):
             return
         
-        # Crear nueva instancia para obtener valores por defecto
         from config.configuracion import ConfiguracionGlobal
         config_defecto = ConfiguracionGlobal()
         
-        # Actualizar configuracion actual
-        config.directorio_entrenamiento = config_defecto.directorio_entrenamiento
-        config.directorio_prueba = config_defecto.directorio_prueba
+        config.directorio_entrenamiento_tumor = config_defecto.directorio_entrenamiento_tumor
+        config.directorio_entrenamiento_notumor = config_defecto.directorio_entrenamiento_notumor
+        config.directorio_prueba_tumor = config_defecto.directorio_prueba_tumor
+        config.directorio_prueba_notumor = config_defecto.directorio_prueba_notumor
         config.procesamiento = config_defecto.procesamiento
         config.entrenamiento = config_defecto.entrenamiento
         config.cache = config_defecto.cache
@@ -341,9 +373,9 @@ class Configurador:
         self.actualizar_estado("Valores por defecto restaurados")
     
     def marcar_modificada(self):
-        """Marca la configuracion como modificada"""
+        """Marca la configuración como modificada"""
         self.config_modificada = True
-        self.actualizar_estado("Configuracion modificada - No guardada")
+        self.actualizar_estado("Configuración modificada - No guardada")
     
     def actualizar_estado(self, mensaje):
         """Actualiza el mensaje de estado"""

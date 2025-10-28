@@ -1,4 +1,4 @@
-# analysis/evaluador.py - CORREGIR
+# analysis/evaluador.py - ACTUALIZADO
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -20,10 +20,11 @@ class EvaluadorANFIS:
         self.nombres_caracteristicas = ['Contraste', 'ASM', 'Homogeneidad', 
                                        'Energia', 'Media', 'Entropia', 'Varianza']
     
-    def evaluar_modelo(self, save_plots=None):
-        """Evaluacion completa del modelo con graficos ROC"""
-        # Usar configuracion si no se especifica
-        save_plots = save_plots if save_plots is not None else config.analisis.guardar_graficos
+    def evaluar_modelo(self, guardar_graficos=None, visualizar_graficos=True):
+        """Evaluacion completa del modelo con graficos ROC - ACTUALIZADO"""
+        # PRIORIDAD: parámetro de función > configuración global
+        if guardar_graficos is None:
+            guardar_graficos = config.analisis.guardar_metricas  # Usar métricas como fallback
 
         print("\n" + "="*50)
         print("EVALUACION DEL MODELO ANFIS")
@@ -45,10 +46,10 @@ class EvaluadorANFIS:
         
         # Metricas detalladas
         tn, fp, fn, tp = cm.ravel()
-        sensitivity = tp / (tp + fn) if (tp + fn) > 0 else 0
-        specificity = tn / (tn + fp) if (tn + fp) > 0 else 0
-        precision = tp / (tp + fp) if (tp + fp) > 0 else 0
-        f1 = 2 * (precision * sensitivity) / (precision + sensitivity) if (precision + sensitivity) > 0 else 0
+        sensitivity = float(tp / (tp + fn) if (tp + fn) > 0 else 0)
+        specificity = float(tn / (tn + fp) if (tn + fp) > 0 else 0)
+        precision = float(tp / (tp + fp) if (tp + fp) > 0 else 0)
+        f1 = float(2 * (precision * sensitivity) / (precision + sensitivity) if (precision + sensitivity) > 0 else 0)
         
         print(f"\nMETRICAS DETALLADAS:")
         print(f"  Sensibilidad (Recall): {sensitivity:.4f}")
@@ -57,43 +58,49 @@ class EvaluadorANFIS:
         print(f"  F1-Score: {f1:.4f}")
         
         # Curva ROC
+        fpr, tpr = None, None
         if len(np.unique(self.y)) > 1:
             fpr, tpr, _ = roc_curve(self.y, y_cont)
-            roc_auc = auc(fpr, tpr)
+            roc_auc = float(auc(fpr, tpr))
             print(f"  AUC-ROC: {roc_auc:.4f}")
         else:
-            roc_auc = 0
+            roc_auc = 0.0
             print("  No se puede calcular ROC (solo una clase presente)")
         
         # Preparar resultados
+        metricas_clasificacion = {
+            'precision': precision,
+            'sensitivity': sensitivity,
+            'specificity': specificity,
+            'f1_score': f1,
+            'auc': roc_auc
+        }
+        
         resultados_eval = {
             'metricas': {
-                'sensitivity': sensitivity,
-                'specificity': specificity,
-                'precision': precision,
-                'f1_score': f1,
-                'auc': roc_auc
+                'clasificacion': metricas_clasificacion
             },
-            'predicciones': {'y_cont': y_cont, 'y_pred': y_pred},
-            'matriz_confusion': cm,
+            'predicciones': {
+                'y_cont': y_cont.tolist() if isinstance(y_cont, np.ndarray) else y_cont,
+                'y_pred': y_pred.tolist() if isinstance(y_pred, np.ndarray) else y_pred
+            },
+            'matriz_confusion': cm.tolist() if isinstance(cm, np.ndarray) else cm,
             'reporte_clasificacion': reporte
         }
         
-        # Graficos - CORREGIDO: Usar sistema de archivos del proyecto
-        if save_plots:
-            fig = self._generar_graficos_evaluacion(cm, fpr, tpr, roc_auc, y_cont, y_pred)
-            
-        # Guardar metricas en cache si esta configurado
-        if config.cache.usar_cache_resultados:
-            sistema_cache.guardar_metricas(
-                config.entrenamiento.nombre_modelo, 
-                resultados_eval['metricas']
-            )
+        # Graficos
+        self._generar_graficos_evaluacion(cm, fpr, tpr, roc_auc, y_cont, y_pred, guardar_graficos, visualizar_graficos)
+        
+        # Las métricas se guardarán al final del pipeline cuando se combinen con las del análisis
+        self.ultimas_metricas = {'clasificacion': metricas_clasificacion}
         
         return resultados_eval
+        
     
-    def _generar_graficos_evaluacion(self, cm, fpr, tpr, roc_auc, y_cont, y_pred):
-        """Genera graficos de evaluacion completos - CORREGIDO"""
+    def _generar_graficos_evaluacion(self, cm, fpr, tpr, roc_auc, y_cont, y_pred, guardar_graficos=None, visualizar_graficos=True):
+        """Genera graficos de evaluacion completos"""
+        
+        
         fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(15, 12))
         
         # 1. Matriz de Confusion
@@ -159,19 +166,15 @@ class EvaluadorANFIS:
                     f'{valor:.3f}', ha='center', va='bottom')
         
         plt.tight_layout()
-        
-        # CORRECCIÓN: Guardar en el sistema de caché en lugar de directorio actual
-        if config.analisis.guardar_graficos:
-            # Guardar en directorio de análisis
+        # Guardar gráfico
+        if guardar_graficos:
             os.makedirs(config.analisis.directorio_analisis, exist_ok=True)
             ruta_analisis = os.path.join(config.analisis.directorio_analisis, "evaluacion_completa_modelo.png")
             plt.savefig(ruta_analisis, dpi=300, bbox_inches='tight')
-            print(f"✅ Gráfico de evaluación guardado en: {ruta_analisis}")
-            
-            # También guardar en caché si está configurado
-            if config.cache.usar_cache_resultados:
-                sistema_cache.guardar_grafico("evaluacion_completa", fig)
-        
-        plt.show()
-        
+            print(f" Gráfico de evaluación guardado en: {ruta_analisis}")
+        # También guardar en caché si está configurado - ACTUALIZADO
+        if config.cache.guardar_cache_graficos:
+            sistema_cache.guardar_grafico("evaluacion_completa", fig)
+        if visualizar_graficos:
+            plt.show()
         return fig
