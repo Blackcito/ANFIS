@@ -13,6 +13,7 @@ import os
 import sys
 import io
 from pathlib import Path
+import shutil
 
 # Intento de import original (igual que tu versión)
 try:
@@ -245,7 +246,9 @@ class VentanaPrincipal:
             ("Limpiar Cache Modelos", self.limpiar_cache_modelos),
             ("Limpiar Cache Características", self.limpiar_cache_caracteristicas),
             ("Limpiar Cache Resultados", self.limpiar_cache_resultados),
-            ("Estadísticas de Cache", self.mostrar_estadisticas_cache)
+            ("Estadísticas de Cache", self.mostrar_estadisticas_cache),
+            ("Eliminar todo el cache", self.limpiar_todo_cache),
+            ("Eliminar imágenes intermedias", self.limpiar_imagenes_intermedias)
         ]
 
         for i, (texto, comando) in enumerate(botones_util):
@@ -549,6 +552,58 @@ class VentanaPrincipal:
             sistema_cache.limpiar_cache_resultados()
             self.log("Cache de características limpiado")
             self.actualizar_listas()
+
+    def limpiar_todo_cache(self):
+        """Elimina todo el cache (modelos, características y resultados) con confirmación."""
+        if not messagebox.askyesno("Confirmar", "¿Eliminar todo el caché (modelos, características y resultados)? Esto no se puede deshacer."):
+            return
+        try:
+            self.log("Iniciando limpieza completa del caché...")
+            sistema_cache.limpiar_cache_modelos()
+            sistema_cache.limpiar_cache_caracteristicas()
+            sistema_cache.limpiar_cache_resultados()
+            self.log("Limpieza completa del caché finalizada.")
+            try:
+                self.actualizar_listas()
+            except Exception:
+                pass
+            messagebox.showinfo("Completado", "Se ha eliminado todo el caché correctamente.")
+        except Exception as e:
+            self.log(f"Error limpiando todo el caché: {e}")
+            messagebox.showerror("Error", f"No se pudo limpiar todo el caché:\n{e}")
+
+    def limpiar_imagenes_intermedias(self):
+        """Elimina las imágenes intermedias usadas durante el procesamiento.
+
+        Usa la ruta configurada en config.procesamiento.directorio_imagenes_intermedias.
+        Se pide confirmación y se recrea el directorio vacío si existía.
+        """
+        ruta_str = getattr(config.procesamiento, 'directorio_imagenes_intermedias', None)
+        if not ruta_str:
+            self.log("No hay una ruta configurada para imágenes intermedias en la configuración.")
+            messagebox.showwarning("Aviso", "No hay ruta configurada para imágenes intermedias.")
+            return
+
+        ruta = Path(ruta_str)
+        if not ruta.exists():
+            self.log(f"La carpeta de imágenes intermedias no existe: {ruta}")
+            messagebox.showinfo("Info", "La carpeta de imágenes intermedias no existe.")
+            return
+
+        if not messagebox.askyesno("Confirmar", f"¿Eliminar todas las imágenes intermedias en:\n{ruta}? Esta acción eliminará archivos y subcarpetas."):
+            return
+
+        try:
+            # Mover/Eliminar de forma segura
+            self.log(f"Eliminando imágenes intermedias en: {ruta}")
+            # Usar shutil.rmtree para eliminar contenido y recrear carpeta vacía
+            shutil.rmtree(ruta)
+            ruta.mkdir(parents=True, exist_ok=True)
+            self.log("Imágenes intermedias eliminadas correctamente.")
+            messagebox.showinfo("Completado", "Imágenes intermedias eliminadas correctamente.")
+        except Exception as e:
+            self.log(f"Error eliminando imágenes intermedias: {e}")
+            messagebox.showerror("Error", f"No se pudieron eliminar las imágenes intermedias:\n{e}")
 
     def mostrar_estadisticas_cache(self):
         stats = sistema_cache.obtener_estadisticas_cache()
