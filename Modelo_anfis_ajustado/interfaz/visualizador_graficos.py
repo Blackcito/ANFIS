@@ -1,4 +1,4 @@
-# interfaz/visualizador_graficos.py - VERSIÓN PORTABLE
+# interfaz/visualizador_graficos.py - VERSIÓN MEJORADA (SOPORTA TXT Y MÁS)
 
 import tkinter as tk
 from tkinter import ttk, filedialog, scrolledtext
@@ -13,6 +13,8 @@ import glob
 import sys
 from pathlib import Path
 import numpy as np
+import json
+import pandas as pd
 
 #  USAR SISTEMA CENTRALIZADO DE RUTAS
 try:
@@ -40,13 +42,19 @@ except ImportError as e:
 class VentanaGraficos:
     def __init__(self, root):
         self.root = root
-        self.root.title("Visualizador de Gráficos - ANFIS")
-        self.root.geometry("1000x700")
+        self.root.title("Visualizador de Resultados - ANFIS")
+        self.root.geometry("1200x800")
+        
+        # Variables para tipos de archivo a mostrar
+        self.show_imagenes = tk.BooleanVar(value=True)
+        self.show_textos = tk.BooleanVar(value=True)
+        self.show_datos = tk.BooleanVar(value=True)
+        
         # Flags para controlar las fuentes que se buscarán
-        self.show_cache_graficos = tk.BooleanVar(value=True)         # cache/resultados/graficos
-        self.show_analisis = tk.BooleanVar(value=True)               # directorio de analisis
-        # Imagenes intermedias: parent + subfolders
-        # Dejar el parent marcado tal como pidió el usuario
+        self.show_cache_graficos = tk.BooleanVar(value=True)
+        self.show_cache_reportes = tk.BooleanVar(value=True)
+        self.show_cache_metricas = tk.BooleanVar(value=True)
+        self.show_analisis = tk.BooleanVar(value=True)
         self.show_imagenes_intermedias = tk.BooleanVar(value=True)
 
         # Sub-checks para carpetas internas dentro de directorio_imagenes_intermedias
@@ -56,23 +64,19 @@ class VentanaGraficos:
         self.show_img_mask = tk.BooleanVar(value=True)
         self.show_img_roi = tk.BooleanVar(value=True)
 
-        self.graficos_disponibles = []
+        self.archivos_disponibles = []
         self.crear_interfaz()
-        # llenar lista inicial
         self.actualizar_lista()
     
     def obtener_rutas_busqueda(self):
-        """Obtiene las rutas donde buscar gráficos usando sistema centralizado"""
+        """Obtiene las rutas donde buscar archivos usando sistema centralizado"""
         rutas_busqueda = []
         
         if not sistema_rutas:
             print(" Sistema de rutas no disponible")
             return [os.getcwd()]
         
-        #  USAR SISTEMA CENTRALIZADO DE RUTAS
-        
-
-        # 2. Directorio de cache persistente para gráficos (opcional)
+        # 1. Directorio de cache persistente para gráficos
         try:
             cache_graficos = sistema_rutas.cache_dir / "resultados" / "graficos"
             if self.show_cache_graficos.get() and cache_graficos.exists():
@@ -80,7 +84,31 @@ class VentanaGraficos:
         except Exception:
             pass
 
-        # 3. Directorio de análisis persistente (opcional)
+        # 2. Directorio de cache para reportes
+        try:
+            cache_reportes = sistema_rutas.cache_dir / "resultados" / "reportes"
+            if self.show_cache_reportes.get() and cache_reportes.exists():
+                rutas_busqueda.append(str(cache_reportes))
+        except Exception:
+            pass
+
+        # 3. Directorio de cache para métricas
+        try:
+            cache_metricas = sistema_rutas.cache_dir / "resultados" / "metricas"
+            if self.show_cache_metricas.get() and cache_metricas.exists():
+                rutas_busqueda.append(str(cache_metricas))
+        except Exception:
+            pass
+
+        # 4. Directorio de cache para datos de reglas
+        try:
+            cache_datos_reglas = sistema_rutas.cache_dir / "resultados" / "datos_reglas"
+            if cache_datos_reglas.exists():
+                rutas_busqueda.append(str(cache_datos_reglas))
+        except Exception:
+            pass
+
+        # 5. Directorio de análisis persistente
         try:
             if self.show_analisis.get() and config and hasattr(config.analisis, 'directorio_analisis'):
                 analisis_dir = Path(config.analisis.directorio_analisis)
@@ -89,11 +117,10 @@ class VentanaGraficos:
         except Exception:
             pass
 
-        # 4. Directorio de imágenes intermedias (opcional) -> incluir subcarpetas seleccionadas
+        # 6. Directorio de imágenes intermedias
         try:
             if self.show_imagenes_intermedias.get() and config and hasattr(config.procesamiento, 'directorio_imagenes_intermedias'):
                 imagenes_dir = Path(config.procesamiento.directorio_imagenes_intermedias)
-                # Lista de pares (variable, nombre_subcarpeta)
                 subdirs = [
                     (self.show_img_original, 'original'),
                     (self.show_img_enhanced, 'enhanced'),
@@ -106,15 +133,11 @@ class VentanaGraficos:
                     try:
                         if not var.get():
                             continue
-
-                        # First try exact subfolder name (legacy)
                         ruta_sub = imagenes_dir / sub
                         if ruta_sub.exists():
                             rutas_busqueda.append(str(ruta_sub))
                             continue
-
-                        # Fallback: some pipelines save with numeric prefixes like '01_original', '02_enhanced',
-                        # so scan children and match by substring to be tolerant.
+                        # Fallback: buscar subcarpetas por nombre
                         for child in imagenes_dir.iterdir():
                             try:
                                 if child.is_dir() and sub in child.name.lower():
@@ -127,7 +150,7 @@ class VentanaGraficos:
         except Exception:
             pass
         
-        # 5. Directorios de desarrollo/backup (solo en modo desarrollo)
+        # 7. Directorios de desarrollo/backup (solo en modo desarrollo)
         if sistema_rutas and getattr(sistema_rutas, '_modo', None) == "desarrollo":
             ruta_analisis = sistema_rutas.base_dir / "analisis_reglas_anfis"
             if ruta_analisis.exists() and str(ruta_analisis) not in rutas_busqueda:
@@ -144,89 +167,106 @@ class VentanaGraficos:
             analisis_dir = Path(config.analisis.directorio_analisis)
             analisis_dir.mkdir(parents=True, exist_ok=True)
             rutas_validas.append(str(analisis_dir))
-            print(f" Creado directorio de análisis: {analisis_dir}")
         
-        #print(f" Rutas de búsqueda configuradas: {len(rutas_validas)} ubicaciones")
         return rutas_validas
     
-    def buscar_graficos(self):
-        """Buscar archivos de gráficos en múltiples ubicaciones - ACTUALIZADO"""
+    def buscar_archivos(self):
+        """Buscar archivos en múltiples ubicaciones según los tipos seleccionados"""
         carpetas_busqueda = self.obtener_rutas_busqueda()
-        extensiones = ('*.png', '*.jpg', '*.jpeg')
-        graficos = []
+        archivos = []
         
-        #print(f" Buscando gráficos en {len(carpetas_busqueda)} ubicaciones...")
+        extensiones_imagen = ['.png', '.jpg', '.jpeg', '.bmp', '.tiff']
+        extensiones_texto = ['.txt', '.log', '.md', '.rst']
+        extensiones_datos = ['.csv', '.json', '.xml', '.yaml', '.yml']
         
         for carpeta in carpetas_busqueda:
             try:
                 carpeta_path = Path(carpeta)
                 if carpeta_path.exists():
-                    #  USAR pathlib PARA MÁS PORTABILIDAD
-                    for extension in extensiones:
-                        patron = carpeta_path / "**" / extension
-                        graficos.extend([str(p) for p in carpeta_path.glob(f"**/{extension}")])
-                    
-                    # Búsqueda recursiva adicional
+                    # Buscar todos los archivos
                     for archivo in carpeta_path.rglob("*"):
-                        if archivo.suffix.lower() in ['.png', '.jpg', '.jpeg']:
-                            ruta_str = str(archivo)
-                            if ruta_str not in graficos:
-                                graficos.append(ruta_str)
+                        if archivo.is_file():
+                            extension = archivo.suffix.lower()
+                            
+                            # Filtrar por tipo seleccionado
+                            if (self.show_imagenes.get() and extension in extensiones_imagen) or \
+                               (self.show_textos.get() and extension in extensiones_texto) or \
+                               (self.show_datos.get() and extension in extensiones_datos):
+                                
+                                ruta_str = str(archivo)
+                                if ruta_str not in archivos:
+                                    archivos.append(ruta_str)
             except Exception as e:
                 print(f" Error buscando en {carpeta}: {e}")
         
         # Ordenar por fecha de modificación (más recientes primero)
-        graficos_ordenados = []
-        for grafico in graficos:
+        archivos_ordenados = []
+        for archivo in archivos:
             try:
-                grafico_path = Path(grafico)
-                if grafico_path.exists():
-                    graficos_ordenados.append(grafico)
+                archivo_path = Path(archivo)
+                if archivo_path.exists():
+                    archivos_ordenados.append(archivo)
             except Exception as e:
-                print(f" Error accediendo a {grafico}: {e}")
+                print(f" Error accediendo a {archivo}: {e}")
         
-        # Ordenar por fecha de modificación
-        graficos_ordenados.sort(key=lambda x: Path(x).stat().st_mtime if Path(x).exists() else 0, reverse=True)
+        archivos_ordenados.sort(key=lambda x: Path(x).stat().st_mtime if Path(x).exists() else 0, reverse=True)
         
-        #print(f" Encontrados {len(graficos_ordenados)} gráficos")
-        return graficos_ordenados
+        return archivos_ordenados
     
     def crear_interfaz(self):
         main_frame = ttk.Frame(self.root, padding="10")
         main_frame.pack(fill=tk.BOTH, expand=True)
 
-        # Controles
+        # Controles superiores
         control_frame = ttk.Frame(main_frame)
         control_frame.pack(fill=tk.X, pady=(0, 10))
 
-        ttk.Label(control_frame, text="Seleccionar gráfico:").pack(side=tk.LEFT, padx=(0, 10))
+        ttk.Label(control_frame, text="Seleccionar archivo:").pack(side=tk.LEFT, padx=(0, 10))
 
-        # Mostrar nombres de archivo en el combo, no rutas completas
-        nombres_graficos = [Path(g).name for g in self.graficos_disponibles]
-        self.combo_graficos = ttk.Combobox(control_frame, values=nombres_graficos, width=80)
-        self.combo_graficos.pack(side=tk.LEFT, padx=(0, 10), fill=tk.X, expand=True)
+        # Combobox para archivos
+        nombres_archivos = [Path(g).name for g in self.archivos_disponibles]
+        self.combo_archivos = ttk.Combobox(control_frame, values=nombres_archivos, width=80)
+        self.combo_archivos.pack(side=tk.LEFT, padx=(0, 10), fill=tk.X, expand=True)
 
-        if nombres_graficos:
-            self.combo_graficos.set(nombres_graficos[0])
+        if nombres_archivos:
+            self.combo_archivos.set(nombres_archivos[0])
 
         ttk.Button(control_frame, text="Actualizar Lista", command=self.actualizar_lista).pack(side=tk.LEFT, padx=(0, 10))
-        ttk.Button(control_frame, text="Buscar Archivo", command=self.buscar_archivo).pack(side=tk.LEFT)
+        ttk.Button(control_frame, text="Buscar Archivo", command=self.buscar_archivo_manual).pack(side=tk.LEFT)
 
-        # ===== Fuentes a incluir (checkboxes) =====
+        # ===== FILTROS DE TIPO DE ARCHIVO =====
+        filtros_frame = ttk.Frame(main_frame)
+        filtros_frame.pack(fill=tk.X, pady=(5, 10))
+        
+        ttk.Label(filtros_frame, text="Mostrar tipos:").pack(side=tk.LEFT, padx=(0, 10))
+        ttk.Checkbutton(filtros_frame, text="Imágenes", variable=self.show_imagenes,
+                       command=self.actualizar_lista).pack(side=tk.LEFT, padx=5)
+        ttk.Checkbutton(filtros_frame, text="Textos", variable=self.show_textos,
+                       command=self.actualizar_lista).pack(side=tk.LEFT, padx=5)
+        ttk.Checkbutton(filtros_frame, text="Datos", variable=self.show_datos,
+                       command=self.actualizar_lista).pack(side=tk.LEFT, padx=5)
+
+        # ===== FUENTES A INCLUIR =====
         fuentes_frame = ttk.Frame(main_frame)
         fuentes_frame.pack(fill=tk.X, pady=(5, 10))
         ttk.Label(fuentes_frame, text="Incluir fuentes:").pack(side=tk.LEFT, padx=(0, 10))
+        
         ttk.Checkbutton(fuentes_frame, text="Cache - Gráficos", variable=self.show_cache_graficos,
-                        command=self.actualizar_lista).pack(side=tk.LEFT, padx=5)
+                       command=self.actualizar_lista).pack(side=tk.LEFT, padx=5)
+        ttk.Checkbutton(fuentes_frame, text="Cache - Reportes", variable=self.show_cache_reportes,
+                       command=self.actualizar_lista).pack(side=tk.LEFT, padx=5)
+        ttk.Checkbutton(fuentes_frame, text="Cache - Métricas", variable=self.show_cache_metricas,
+                       command=self.actualizar_lista).pack(side=tk.LEFT, padx=5)
         ttk.Checkbutton(fuentes_frame, text="Análisis", variable=self.show_analisis,
-                        command=self.actualizar_lista).pack(side=tk.LEFT, padx=5)
+                       command=self.actualizar_lista).pack(side=tk.LEFT, padx=5)
         ttk.Checkbutton(fuentes_frame, text="Imágenes intermedias", variable=self.show_imagenes_intermedias,
-                        command=self.actualizar_lista).pack(side=tk.LEFT, padx=5)
-        # Mini-caja con subcarpetas dentro de 'imagenes_intermedias'
+                       command=self.actualizar_lista).pack(side=tk.LEFT, padx=5)
+        
+        # Subcarpetas de imágenes intermedias
         subimgs_frame = ttk.Frame(fuentes_frame)
         subimgs_frame.pack(side=tk.LEFT, padx=(0,10))
         ttk.Label(subimgs_frame, text="[subcarpetas]").pack(side=tk.TOP, anchor='w')
-        # Create and keep references so we can enable/disable them when parent toggles
+        
         self.chk_original = ttk.Checkbutton(subimgs_frame, text="original", variable=self.show_img_original)
         self.chk_original.pack(side=tk.LEFT, padx=2)
         self.chk_enhanced = ttk.Checkbutton(subimgs_frame, text="enhanced", variable=self.show_img_enhanced)
@@ -243,68 +283,59 @@ class VentanaGraficos:
         info_frame.pack(fill=tk.X, pady=(0, 10))
 
         rutas_info = self.obtener_rutas_busqueda()
-        info_text = f"Encontrados {len(self.graficos_disponibles)} gráficos | Buscando en: {len(rutas_info)} ubicaciones"
+        info_text = f"Encontrados {len(self.archivos_disponibles)} archivos | Buscando en: {len(rutas_info)} ubicaciones"
         self.info_label = ttk.Label(info_frame, text=info_text, font=('Arial', 9))
         self.info_label.pack(side=tk.LEFT)
 
         # Botón para mostrar rutas
         if rutas_info:
             ttk.Button(info_frame, text=" Ver Rutas",
-                       command=lambda: self.mostrar_ventana_rutas(rutas_info),
-                       width=10).pack(side=tk.RIGHT)
+                      command=lambda: self.mostrar_ventana_rutas(rutas_info),
+                      width=10).pack(side=tk.RIGHT)
 
-        # Área del gráfico
-        self.frame_grafico = ttk.Frame(main_frame)
-        self.frame_grafico.pack(fill=tk.BOTH, expand=True)
+        # ===== ÁREA DE VISUALIZACIÓN PRINCIPAL =====
+        # Frame para contenido (gráficos o texto)
+        self.frame_contenido = ttk.Frame(main_frame)
+        self.frame_contenido.pack(fill=tk.BOTH, expand=True)
 
-        # Bind del combo (una sola vez)
-        self.combo_graficos.bind('<<ComboboxSelected>>', lambda e: self.on_combo_selection())
+        # Bind del combo
+        self.combo_archivos.bind('<<ComboboxSelected>>', lambda e: self.on_combo_selection())
 
-        # Bind variable traces for subfolder toggles and parent toggle so changes always refresh
-        # Use trace_add (available in tkinter) to reliably call actualizar_lista on changes
+        # Configurar eventos para actualización automática
         try:
-            # Parent toggle: enable/disable subchecks when changed
             self.show_imagenes_intermedias.trace_add('write', lambda *args: (self._toggle_subimgs_state(), self.actualizar_lista()))
-            # Subfolder toggles: refresh list when any subfolder changes
-            self.show_img_original.trace_add('write', lambda *args: self.actualizar_lista())
-            self.show_img_enhanced.trace_add('write', lambda *args: self.actualizar_lista())
-            self.show_img_blurred.trace_add('write', lambda *args: self.actualizar_lista())
-            self.show_img_mask.trace_add('write', lambda *args: self.actualizar_lista())
-            self.show_img_roi.trace_add('write', lambda *args: self.actualizar_lista())
+            for var in [self.show_img_original, self.show_img_enhanced, self.show_img_blurred, 
+                       self.show_img_mask, self.show_img_roi]:
+                var.trace_add('write', lambda *args: self.actualizar_lista())
         except Exception:
-            # Fallback: rely on Checkbutton command callbacks (older tkinter)
-            self.chk_original.config(command=self.actualizar_lista)
-            self.chk_enhanced.config(command=self.actualizar_lista)
-            self.chk_blurred.config(command=self.actualizar_lista)
-            self.chk_mask.config(command=self.actualizar_lista)
-            self.chk_roi.config(command=self.actualizar_lista)
+            # Fallback para versiones antiguas de tkinter
+            for chk in [self.chk_original, self.chk_enhanced, self.chk_blurred, self.chk_mask, self.chk_roi]:
+                chk.config(command=self.actualizar_lista)
 
-        # Ensure initial enabled/disabled state of subchecks matches parent
         self._toggle_subimgs_state()
 
-        # Cargar primer gráfico si existe
-        if self.graficos_disponibles:
-            self.mostrar_grafico(self.graficos_disponibles[0])
+        # Cargar primer archivo si existe
+        if self.archivos_disponibles:
+            self.mostrar_archivo(self.archivos_disponibles[0])
         else:
-            self.mostrar_mensaje_no_graficos()
+            self.mostrar_mensaje_no_archivos()
 
     def _toggle_subimgs_state(self):
-        """Enable or disable the subfolder checkbuttons depending on parent toggle."""
+        """Habilita o deshabilita los checkbuttons de subcarpetas según el estado del padre"""
         state = 'normal' if self.show_imagenes_intermedias.get() else 'disabled'
         try:
             for chk in (self.chk_original, self.chk_enhanced, self.chk_blurred, self.chk_mask, self.chk_roi):
                 chk.config(state=state)
         except Exception:
-            # If any widget is not yet created, ignore
             pass
     
     def mostrar_ventana_rutas(self, rutas):
         """Muestra una ventana con las rutas de búsqueda"""
         ventana_rutas = tk.Toplevel(self.root)
-        ventana_rutas.title("Rutas de Búsqueda de Gráficos")
+        ventana_rutas.title("Rutas de Búsqueda")
         ventana_rutas.geometry("600x400")
         
-        ttk.Label(ventana_rutas, text="Rutas donde se buscan gráficos:", 
+        ttk.Label(ventana_rutas, text="Rutas donde se buscan archivos:", 
                  font=('Arial', 10, 'bold')).pack(pady=10)
         
         texto_rutas = scrolledtext.ScrolledText(ventana_rutas, wrap=tk.WORD, width=70, height=20)
@@ -322,19 +353,19 @@ class VentanaGraficos:
         
         texto_rutas.config(state=tk.DISABLED)
     
-    def mostrar_mensaje_no_graficos(self):
-        """Muestra mensaje cuando no hay gráficos"""
-        self.limpiar_area_grafico()
-        mensaje_frame = ttk.Frame(self.frame_grafico)
+    def mostrar_mensaje_no_archivos(self):
+        """Muestra mensaje cuando no hay archivos"""
+        self.limpiar_area_contenido()
+        mensaje_frame = ttk.Frame(self.frame_contenido)
         mensaje_frame.pack(expand=True, fill=tk.BOTH)
         
-        ttk.Label(mensaje_frame, text="No se encontraron gráficos", 
+        ttk.Label(mensaje_frame, text="No se encontraron archivos", 
                  font=('Arial', 14, 'bold')).pack(pady=20)
         
-        info_text = """Para generar gráficos:
+        info_text = """Para generar archivos:
 
 1. Ejecute el pipeline ANFIS completo desde la ventana principal
-2. Los gráficos se guardarán automáticamente en las ubicaciones persistentes
+2. Los archivos se guardarán automáticamente en las ubicaciones persistentes
 
 Rutas de búsqueda actuales:"""
         
@@ -359,117 +390,244 @@ Rutas de búsqueda actuales:"""
                   command=self.actualizar_lista).pack(pady=10)
     
     def actualizar_lista(self):
-        """Actualiza la lista de gráficos disponibles"""
-        self.graficos_disponibles = self.buscar_graficos()
+        """Actualiza la lista de archivos disponibles"""
+        self.archivos_disponibles = self.buscar_archivos()
         
         # Actualizar combo con nombres de archivo
-        nombres_graficos = [Path(g).name for g in self.graficos_disponibles]
-        self.combo_graficos['values'] = nombres_graficos
+        nombres_archivos = [Path(g).name for g in self.archivos_disponibles]
+        self.combo_archivos['values'] = nombres_archivos
         
         rutas_info = self.obtener_rutas_busqueda()
-        info_text = f"Encontrados {len(self.graficos_disponibles)} gráficos | Buscando en: {len(rutas_info)} ubicaciones"
+        info_text = f"Encontrados {len(self.archivos_disponibles)} archivos | Buscando en: {len(rutas_info)} ubicaciones"
         self.info_label.config(text=info_text)
         
-        if self.graficos_disponibles:
-            self.combo_graficos.set(nombres_graficos[0])
-            self.mostrar_grafico(self.graficos_disponibles[0])
+        if self.archivos_disponibles:
+            self.combo_archivos.set(nombres_archivos[0])
+            self.mostrar_archivo(self.archivos_disponibles[0])
         else:
-            self.mostrar_mensaje_no_graficos()
+            self.mostrar_mensaje_no_archivos()
     
-    def buscar_archivo(self):
+    def buscar_archivo_manual(self):
         """Abre diálogo para buscar archivo manualmente"""
         archivo = filedialog.askopenfilename(
-            title="Seleccionar archivo de gráfico",
-            filetypes=[("Imágenes", "*.png *.jpg *.jpeg"), ("Todos los archivos", "*.*")]
+            title="Seleccionar archivo",
+            filetypes=[
+                ("Todos los archivos soportados", "*.png *.jpg *.jpeg *.txt *.log *.csv *.json"),
+                ("Imágenes", "*.png *.jpg *.jpeg"),
+                ("Archivos de texto", "*.txt *.log"),
+                ("Datos", "*.csv *.json"),
+                ("Todos los archivos", "*.*")
+            ]
         )
         if archivo:
             # Agregar a la lista si no está
-            if archivo not in self.graficos_disponibles:
-                self.graficos_disponibles.insert(0, archivo)
-                nombres_graficos = [Path(g).name for g in self.graficos_disponibles]
-                self.combo_graficos['values'] = nombres_graficos
-                self.combo_graficos.set(Path(archivo).name)
+            if archivo not in self.archivos_disponibles:
+                self.archivos_disponibles.insert(0, archivo)
+                nombres_archivos = [Path(g).name for g in self.archivos_disponibles]
+                self.combo_archivos['values'] = nombres_archivos
+                self.combo_archivos.set(Path(archivo).name)
             
-            self.mostrar_grafico(archivo)
+            self.mostrar_archivo(archivo)
     
-    def mostrar_grafico(self, ruta_archivo):
-        """Muestra el gráfico seleccionado"""
-        self.limpiar_area_grafico()
+    def mostrar_archivo(self, ruta_archivo):
+        """Muestra el archivo seleccionado según su tipo"""
+        self.limpiar_area_contenido()
         
         archivo_path = Path(ruta_archivo)
         if not archivo_path.exists():
-            error_frame = ttk.Frame(self.frame_grafico)
-            error_frame.pack(expand=True, fill=tk.BOTH)
-            ttk.Label(error_frame, text=f"Archivo no encontrado: {ruta_archivo}", 
-                     foreground='red', font=('Arial', 10)).pack(expand=True)
+            self.mostrar_error(f"Archivo no encontrado: {ruta_archivo}")
             return
         
+        extension = archivo_path.suffix.lower()
+        
         try:
-            # Crear figura usando Figure directamente (evita plt.figure)
+            if extension in ['.png', '.jpg', '.jpeg', '.bmp', '.tiff']:
+                self.mostrar_imagen(archivo_path)
+            elif extension in ['.txt', '.log', '.md', '.rst']:
+                self.mostrar_texto(archivo_path)
+            elif extension in ['.csv']:
+                self.mostrar_csv(archivo_path)
+            elif extension in ['.json']:
+                self.mostrar_json(archivo_path)
+            else:
+                self.mostrar_texto(archivo_path)  # Intentar mostrar como texto por defecto
+                
+        except Exception as e:
+            self.mostrar_error(f"Error al cargar archivo: {str(e)}")
+            print(f" Error cargando {ruta_archivo}: {e}")
+    
+    def mostrar_imagen(self, archivo_path):
+        """Muestra una imagen"""
+        try:
             fig = Figure(figsize=(10, 6), dpi=100)
             ax = fig.add_subplot(111)
             
             img = plt.imread(archivo_path)
 
-            # Mostrar en escala de grises si la imagen es monocroma.
-            # plt.imread puede devolver arrays 2D (grayscale) o 3D (RGB/RGBA).
+            # Detectar si es escala de grises
             is_gray = False
             try:
                 if img.ndim == 2:
                     is_gray = True
                 elif img.ndim == 3 and img.shape[2] == 1:
-                    # Some images may have a singleton channel dimension
                     img = img.reshape(img.shape[0], img.shape[1])
                     is_gray = True
             except Exception:
                 is_gray = False
 
             if is_gray:
-                # If uint8 use 0-255 scale, otherwise let matplotlib auto-scale
                 if getattr(img, 'dtype', None) is not None and img.dtype == np.uint8:
                     ax.imshow(img, cmap='gray', vmin=0, vmax=255)
                 else:
                     ax.imshow(img, cmap='gray')
             else:
                 ax.imshow(img)
+            
             ax.axis('off')
             nombre_archivo = archivo_path.name
-            ax.set_title(f"Gráfico: {nombre_archivo}", pad=20, fontsize=12)
+            ax.set_title(f"Imagen: {nombre_archivo}", pad=20, fontsize=12)
             fig.tight_layout()
             
-            # Integrar en tkinter usando el backend TkAgg
-            canvas = FigureCanvasTkAgg(fig, master=self.frame_grafico)
+            # Integrar en tkinter
+            canvas = FigureCanvasTkAgg(fig, master=self.frame_contenido)
             canvas.draw()
             widget = canvas.get_tk_widget()
             widget.pack(fill=tk.BOTH, expand=True)
             
             # Barra de herramientas
-            toolbar_frame = ttk.Frame(self.frame_grafico)
+            toolbar_frame = ttk.Frame(self.frame_contenido)
             toolbar_frame.pack(fill=tk.X)
-
-            # Usar NavigationToolbar2Tk importado al inicio
             toolbar = NavigationToolbar2Tk(canvas, toolbar_frame)
             toolbar.update()
             
         except Exception as e:
-            error_frame = ttk.Frame(self.frame_grafico)
-            error_frame.pack(expand=True, fill=tk.BOTH)
-            ttk.Label(error_frame, text=f"Error al cargar imagen: {str(e)}", 
-                     foreground='red', font=('Arial', 10)).pack(expand=True)
-            print(f" Error cargando {ruta_archivo}: {e}")
+            raise e
+    
+    def mostrar_texto(self, archivo_path):
+        """Muestra un archivo de texto"""
+        try:
+            # Detectar encoding
+            encodings = ['utf-8', 'latin-1', 'cp1252']
+            contenido = None
+            
+            for encoding in encodings:
+                try:
+                    with open(archivo_path, 'r', encoding=encoding) as f:
+                        contenido = f.read()
+                    break
+                except UnicodeDecodeError:
+                    continue
+            
+            if contenido is None:
+                # Último intento con errores ignorados
+                with open(archivo_path, 'r', encoding='utf-8', errors='ignore') as f:
+                    contenido = f.read()
+            
+            # Crear widget de texto
+            text_frame = ttk.Frame(self.frame_contenido)
+            text_frame.pack(fill=tk.BOTH, expand=True)
+            
+            ttk.Label(text_frame, text=f"Archivo: {archivo_path.name}", 
+                     font=('Arial', 11, 'bold')).pack(pady=5)
+            
+            text_widget = scrolledtext.ScrolledText(text_frame, wrap=tk.WORD, 
+                                                   font=('Consolas', 10))
+            text_widget.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+            
+            text_widget.insert(tk.END, contenido)
+            text_widget.config(state=tk.DISABLED)
+            
+        except Exception as e:
+            raise e
+    
+    def mostrar_csv(self, archivo_path):
+        """Muestra un archivo CSV en formato de tabla"""
+        try:
+            # Leer CSV
+            df = pd.read_csv(archivo_path)
+            
+            # Crear frame para la tabla
+            table_frame = ttk.Frame(self.frame_contenido)
+            table_frame.pack(fill=tk.BOTH, expand=True)
+            
+            ttk.Label(table_frame, text=f"CSV: {archivo_path.name} ({len(df)} filas, {len(df.columns)} columnas)", 
+                     font=('Arial', 11, 'bold')).pack(pady=5)
+            
+            # Crear treeview para mostrar la tabla
+            tree = ttk.Treeview(table_frame)
+            
+            # Configurar columnas
+            tree["columns"] = list(df.columns)
+            tree["show"] = "headings"
+            
+            # Agregar columnas
+            for column in df.columns:
+                tree.heading(column, text=column)
+                tree.column(column, width=100)
+            
+            # Agregar datos
+            for index, row in df.iterrows():
+                tree.insert("", tk.END, values=list(row))
+            
+            # Scrollbars
+            v_scrollbar = ttk.Scrollbar(table_frame, orient=tk.VERTICAL, command=tree.yview)
+            h_scrollbar = ttk.Scrollbar(table_frame, orient=tk.HORIZONTAL, command=tree.xview)
+            tree.configure(yscrollcommand=v_scrollbar.set, xscrollcommand=h_scrollbar.set)
+            
+            # Empaquetar
+            tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+            v_scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+            h_scrollbar.pack(side=tk.BOTTOM, fill=tk.X)
+            
+        except Exception as e:
+            # Si falla la tabla, mostrar como texto
+            self.mostrar_texto(archivo_path)
+    
+    def mostrar_json(self, archivo_path):
+        """Muestra un archivo JSON formateado"""
+        try:
+            with open(archivo_path, 'r', encoding='utf-8') as f:
+                datos = json.load(f)
+            
+            # Formatear JSON
+            contenido = json.dumps(datos, indent=2, ensure_ascii=False)
+            
+            # Mostrar como texto formateado
+            text_frame = ttk.Frame(self.frame_contenido)
+            text_frame.pack(fill=tk.BOTH, expand=True)
+            
+            ttk.Label(text_frame, text=f"JSON: {archivo_path.name}", 
+                     font=('Arial', 11, 'bold')).pack(pady=5)
+            
+            text_widget = scrolledtext.ScrolledText(text_frame, wrap=tk.WORD, 
+                                                   font=('Consolas', 10))
+            text_widget.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+            
+            text_widget.insert(tk.END, contenido)
+            text_widget.config(state=tk.DISABLED)
+            
+        except Exception as e:
+            # Si falla JSON, mostrar como texto plano
+            self.mostrar_texto(archivo_path)
+    
+    def mostrar_error(self, mensaje):
+        """Muestra un mensaje de error"""
+        error_frame = ttk.Frame(self.frame_contenido)
+        error_frame.pack(expand=True, fill=tk.BOTH)
+        ttk.Label(error_frame, text=mensaje, 
+                 foreground='red', font=('Arial', 10)).pack(expand=True)
     
     def on_combo_selection(self):
         """Maneja la selección del combobox"""
-        selected_name = self.combo_graficos.get()
-        # Encontrar la ruta completa correspondiente al nombre seleccionado
-        for grafico in self.graficos_disponibles:
-            if Path(grafico).name == selected_name:
-                self.mostrar_grafico(grafico)
+        selected_name = self.combo_archivos.get()
+        for archivo in self.archivos_disponibles:
+            if Path(archivo).name == selected_name:
+                self.mostrar_archivo(archivo)
                 break
     
-    def limpiar_area_grafico(self):
-        """Limpia el área del gráfico"""
-        for widget in self.frame_grafico.winfo_children():
+    def limpiar_area_contenido(self):
+        """Limpia el área de contenido"""
+        for widget in self.frame_contenido.winfo_children():
             widget.destroy()
 
 def main():

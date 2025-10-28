@@ -171,7 +171,7 @@ class EvaluadorANFIS:
             os.makedirs(config.analisis.directorio_analisis, exist_ok=True)
             ruta_analisis = os.path.join(config.analisis.directorio_analisis, "evaluacion_completa_modelo.png")
             plt.savefig(ruta_analisis, dpi=300, bbox_inches='tight')
-            print(f" Gráfico de evaluación guardado en: {ruta_analisis}")
+            #print(f" Gráfico de evaluación guardado en: {ruta_analisis}")
         # También guardar en caché si está configurado - ACTUALIZADO
         if config.cache.guardar_cache_graficos:
             sistema_cache.guardar_grafico("evaluacion_completa", fig)

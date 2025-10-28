@@ -135,7 +135,7 @@ class AnalizadorReglasANFIS:
         if archivo_salida:
             with open(archivo_salida, 'w', encoding='utf-8') as f:
                 f.write(reporte_texto)
-            print(f"Reporte guardado en: {archivo_salida}")
+            #print(f"Reporte guardado en: {archivo_salida}")
         
         return reporte_texto
     
@@ -182,7 +182,7 @@ class AnalizadorReglasANFIS:
         plt.tight_layout()
         if save_path:
             plt.savefig(save_path, dpi=300, bbox_inches='tight')
-            print(f"Gráfico guardado en: {save_path}")
+            #print(f"Gráfico guardado en: {save_path}")
         if visualizar_graficos:
             try:
                 plt.show()
@@ -244,7 +244,7 @@ class AnalizadorReglasANFIS:
         plt.tight_layout()
         if save_path:
             plt.savefig(save_path, dpi=300, bbox_inches='tight')
-            print(f"Mapa de calor guardado en: {save_path}")
+            #print(f"Mapa de calor guardado en: {save_path}")
         if visualizar_graficos:
             try:
                 plt.show()
@@ -278,7 +278,7 @@ class AnalizadorReglasANFIS:
         plt.tight_layout()
         if save_path:
             plt.savefig(save_path, dpi=300, bbox_inches='tight')
-            print(f"Gráfico de características guardado en: {save_path}")
+            #print(f"Gráfico de características guardado en: {save_path}")
         if visualizar_graficos:
             try:
                 plt.show()

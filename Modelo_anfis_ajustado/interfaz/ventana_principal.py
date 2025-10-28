@@ -242,7 +242,7 @@ class VentanaPrincipal:
 
         botones_util = [
             ("Configuración del Sistema", self.abrir_configuracion),
-            ("Ver Gráficos", self.mostrar_graficos),
+            ("Ver Resultados", self.mostrar_graficos),
             ("Limpiar Cache Modelos", self.limpiar_cache_modelos),
             ("Limpiar Cache Características", self.limpiar_cache_caracteristicas),
             ("Limpiar Cache Resultados", self.limpiar_cache_resultados),
@@ -524,7 +524,7 @@ class VentanaPrincipal:
             self.log(f"Error al abrir configurador: {str(e)}")
 
     def mostrar_graficos(self):
-        self.log("Abriendo visualizador de gráficos...")
+        #self.log("Abriendo visualizador de gráficos...")
         threading.Thread(target=self._abrir_visualizador, daemon=True).start()
 
     def _abrir_visualizador(self):
