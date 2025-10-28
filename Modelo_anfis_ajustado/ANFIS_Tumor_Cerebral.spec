@@ -2,11 +2,11 @@
 
 
 a = Analysis(
-    ['/home/kuroned/ANFIS/Modelo_anfis_ajustado/interfaz/ventana_principal.py'],
+    ['H:\\ANFIS\\Modelo_anfis_ajustado\\interfaz\\ventana_principal.py'],
     pathex=[],
     binaries=[],
     datas=[('config', 'config'), ('core', 'core'), ('utils', 'utils'), ('interfaz', 'interfaz')],
-    hiddenimports=['sklearn', 'scipy', 'PIL', 'PIL._tkinter_finder', 'matplotlib', 'matplotlib.backends.backend_tkagg', 'tkinter', 'xlib', 'gi'],
+    hiddenimports=['sklearn', 'scipy', 'PIL', 'PIL._tkinter_finder', 'matplotlib', 'matplotlib.backends.backend_tkagg', 'tkinter'],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
@@ -35,4 +35,5 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
+    icon=['assets\\icono.ico'],
 )

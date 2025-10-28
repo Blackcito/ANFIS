@@ -1,0 +1,16 @@
+abri visulizador d egraficos, es probable que sea con los checkbox de carpeta acutal y persistente revisalo (cache graficos arroja el fallo)
+
+01:03:58] Exception in Tkinter callback
+[01:03:59] Traceback (most recent call last):
+[01:03:59]   File "tkinter\__init__.py", line 1967, in __call__
+[01:03:59]   File "interfaz\visualizador_graficos.py", line 384, in actualizar_lista
+[01:03:59]     self.graficos_disponibles = self.buscar_graficos()
+[01:03:59]                                 ^^^^^^^^^^^^^^^^^^^^^^
+[01:03:59]   File "interfaz\visualizador_graficos.py", line 171, in buscar_graficos
+[01:03:59]     carpetas_busqueda = self.obtener_rutas_busqueda()
+[01:03:59]                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[01:03:59]   File "interfaz\visualizador_graficos.py", line 162, in obtener_rutas_busqueda
+[01:03:59]     sistema_rutas.resultados_dir.mkdir(parents=True, exist_ok=True)
+[01:03:59]     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[01:03:59] AttributeError: 'SistemaRutas' object has no attribute 'resultados_dir'
+

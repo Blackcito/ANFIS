@@ -38,7 +38,7 @@ def build_executable():
     # Argumentos ESPECÍFICOS por plataforma
     if sys.platform == "win32":
         args_comunes.append("--windowed")
-        args_comunes.append("--icon=assets/icon.ico")  # Si tienes icono
+        args_comunes.append("--icon=assets/icono.ico")  # Si tienes icono
     elif sys.platform.startswith("linux"):
         args_comunes.append("--windowed")
         # Linux puede necesitar hooks adicionales
