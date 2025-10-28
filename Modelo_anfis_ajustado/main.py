@@ -1,4 +1,5 @@
 # main.py - ACTUALIZADO Y SIMPLIFICADO
+# Obsoleto, se mantiene para compatibilidad con versiones anteriores y referencia.
 
 from core.pipeline_anfis import pipeline_anfis
 from config.configuracion import config

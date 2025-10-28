@@ -1,5 +1,5 @@
 # config/menu_configuracion.py
-
+# Obsoleto, se mantiene para compatibilidad con versiones anteriores y referencia.
 import os
 from config.configuracion import config
 

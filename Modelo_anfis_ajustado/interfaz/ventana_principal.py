@@ -231,7 +231,7 @@ class VentanaPrincipal:
         # accion principal destacada
         acciones_frame = ttk.Frame(tab_ejecucion)
         acciones_frame.pack(fill=X, padx=6, pady=(8,6))
-        ttk.Button(acciones_frame, text="🚀 EJECUTAR PIPELINE", command=self.ejecutar_pipeline, bootstyle="success", width=40).pack(pady=6)
+        ttk.Button(acciones_frame, text="EJECUTAR PIPELINE", command=self.ejecutar_pipeline, style='Accent.TButton').pack(fill=tk.X, pady=5)
         self.estado_pipeline = ttk.Label(acciones_frame, text="Listo para ejecutar", bootstyle="success")
         self.estado_pipeline.pack()
 
@@ -432,7 +432,7 @@ class VentanaPrincipal:
         if self.usar_cache_prueba_existente.get() and self.cache_prueba_seleccionado.get():
             self.log(f"   - Cache prueba: {self.cache_prueba_seleccionado.get()}")
 
-        self.log("💾 CONFIGURACIÓN DE GUARDADO (desde Configuración del Sistema):")
+        self.log(" CONFIGURACIÓN DE GUARDADO (desde Configuración del Sistema):")
         self.log(f"   - Guardar cache características: {config.cache.guardar_cache_caracteristicas}")
         self.log(f"   - Guardar cache modelos: {config.cache.guardar_cache_modelos}")
         self.log(f"   - Guardar cache gráficos: {config.cache.guardar_cache_graficos}")
@@ -552,7 +552,7 @@ class VentanaPrincipal:
 
     def mostrar_estadisticas_cache(self):
         stats = sistema_cache.obtener_estadisticas_cache()
-        self.log("📊 ESTADÍSTICAS DE CACHÉ:")
+        self.log(" ESTADÍSTICAS DE CACHÉ:")
         for tipo, datos in stats.items():
             self.log(f"  {tipo}: {datos['archivos']} archivos ({datos['tamaño_mb']} MB)")
 

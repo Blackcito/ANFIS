@@ -43,13 +43,11 @@ class VentanaGraficos:
         self.root.title("Visualizador de Gráficos - ANFIS")
         self.root.geometry("1000x700")
         # Flags para controlar las fuentes que se buscarán
-        self.show_resultados = tk.BooleanVar(value=True)             # resultados persistentes
         self.show_cache_graficos = tk.BooleanVar(value=True)         # cache/resultados/graficos
         self.show_analisis = tk.BooleanVar(value=True)               # directorio de analisis
         # Imagenes intermedias: parent + subfolders
         # Dejar el parent marcado tal como pidió el usuario
         self.show_imagenes_intermedias = tk.BooleanVar(value=True)
-        self.show_working_dir = tk.BooleanVar(value=True)            # cwd
 
         # Sub-checks para carpetas internas dentro de directorio_imagenes_intermedias
         self.show_img_original = tk.BooleanVar(value=True)
@@ -131,25 +129,9 @@ class VentanaGraficos:
         
         # 5. Directorios de desarrollo/backup (solo en modo desarrollo)
         if sistema_rutas and getattr(sistema_rutas, '_modo', None) == "desarrollo":
-            rutas_desarrollo = [
-                sistema_rutas.base_dir / "resultados",
-                sistema_rutas.base_dir / "graficos", 
-                sistema_rutas.base_dir / "analisis_reglas_anfis"
-            ]
-            
-            for ruta in rutas_desarrollo:
-                if ruta.exists() and str(ruta) not in rutas_busqueda:
-                    rutas_busqueda.append(str(ruta))
-                    #print(f" Añadido directorio desarrollo: {ruta}")
-        
-        # 6. Directorio de trabajo actual (opcional)
-        try:
-            if self.show_working_dir.get():
-                trabajo_actual = os.getcwd()
-                if trabajo_actual not in rutas_busqueda:
-                    rutas_busqueda.append(trabajo_actual)
-        except Exception:
-            pass
+            ruta_analisis = sistema_rutas.base_dir / "analisis_reglas_anfis"
+            if ruta_analisis.exists() and str(ruta_analisis) not in rutas_busqueda:
+                rutas_busqueda.append(str(ruta_analisis))
         
         # Filtrar solo rutas que existen y eliminar duplicados
         rutas_validas = []
@@ -157,11 +139,12 @@ class VentanaGraficos:
             if os.path.exists(ruta) and ruta not in rutas_validas:
                 rutas_validas.append(ruta)
         
-        # Si no hay rutas válidas, crear directorio de resultados
-        if not rutas_validas and sistema_rutas:
-            sistema_rutas.resultados_dir.mkdir(parents=True, exist_ok=True)
-            rutas_validas.append(str(sistema_rutas.resultados_dir))
-            print(f" Creado directorio de resultados: {sistema_rutas.resultados_dir}")
+        # Si no hay rutas válidas, crear directorio de análisis como respaldo
+        if not rutas_validas and sistema_rutas and config and hasattr(config.analisis, 'directorio_analisis'):
+            analisis_dir = Path(config.analisis.directorio_analisis)
+            analisis_dir.mkdir(parents=True, exist_ok=True)
+            rutas_validas.append(str(analisis_dir))
+            print(f" Creado directorio de análisis: {analisis_dir}")
         
         #print(f" Rutas de búsqueda configuradas: {len(rutas_validas)} ubicaciones")
         return rutas_validas
@@ -233,8 +216,6 @@ class VentanaGraficos:
         fuentes_frame = ttk.Frame(main_frame)
         fuentes_frame.pack(fill=tk.X, pady=(5, 10))
         ttk.Label(fuentes_frame, text="Incluir fuentes:").pack(side=tk.LEFT, padx=(0, 10))
-        ttk.Checkbutton(fuentes_frame, text="Resultados persistentes", variable=self.show_resultados,
-                        command=self.actualizar_lista).pack(side=tk.LEFT, padx=5)
         ttk.Checkbutton(fuentes_frame, text="Cache - Gráficos", variable=self.show_cache_graficos,
                         command=self.actualizar_lista).pack(side=tk.LEFT, padx=5)
         ttk.Checkbutton(fuentes_frame, text="Análisis", variable=self.show_analisis,
@@ -256,8 +237,6 @@ class VentanaGraficos:
         self.chk_mask.pack(side=tk.LEFT, padx=2)
         self.chk_roi = ttk.Checkbutton(subimgs_frame, text="roi", variable=self.show_img_roi)
         self.chk_roi.pack(side=tk.LEFT, padx=2)
-        ttk.Checkbutton(fuentes_frame, text="Carpeta actual", variable=self.show_working_dir,
-                        command=self.actualizar_lista).pack(side=tk.LEFT, padx=5)
 
         # Información
         info_frame = ttk.Frame(main_frame)

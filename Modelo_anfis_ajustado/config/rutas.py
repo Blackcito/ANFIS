@@ -35,9 +35,9 @@ class SistemaRutas:
         # Crear directorios persistentes
         self._crear_estructura_persistente()
         
-        print(f"🔧 Modo: {self._modo}")
-        print(f"📁 Base: {self._base_dir}")
-        print(f"💾 Persistente: {self._persist_dir}")
+        #print(f" Modo: {self._modo}")
+        #print(f" Base: {self._base_dir}")
+        #print(f" Persistente: {self._persist_dir}")
     
     def _crear_estructura_persistente(self):
         """Crea toda la estructura de directorios persistentes"""

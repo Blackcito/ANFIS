@@ -406,14 +406,14 @@ class AnalizadorReglasANFIS:
             # para evitar crear dos ficheros distintos.
             try:
                 sistema_cache.guardar_metricas(config.entrenamiento.nombre_modelo, metricas)
-                print("guardando metricas en cache... (unificadas)")
+                #print("guardando metricas en cache... (unificadas)")
             except Exception as e:
                 print(f"Error guardando metricas en cache: {e}")
             
         if config.cache.guardar_cache_datos_reglas:
             sistema_cache.guardar_datos_reglas("analisis", datos_csv, datos_txt)
         
-        print(f" Análisis completo guardado en: {carpeta_salida}")
+        #print(f" Análisis completo guardado en: {carpeta_salida}")
 
         return {
             'reporte_texto': reporte if config.analisis.guardar_reportes else "No generado",

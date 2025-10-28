@@ -68,7 +68,7 @@ class PipelineANFIS:
         """Carga solo los datos necesarios según las opciones - ACTUALIZADO"""
         if self.opciones_actuales['entrenar_nuevo']:
             # Necesitamos ambos conjuntos
-            print("📥 Cargando datos de entrenamiento y prueba...")
+            print(" Cargando datos de entrenamiento y prueba...")
             X_train, y_train = gestor_datos.cargar_datos_entrenamiento(
                 tumor_dir=self.opciones_actuales.get('train_tumor_dir'),
                 notumor_dir=self.opciones_actuales.get('train_notumor_dir'),
@@ -144,7 +144,7 @@ class PipelineANFIS:
         resultados = {}
         visualizar_graficos = self.opciones_actuales.get('visualizar_graficos', True)
         if len(X_test) > 0:
-            print("📊 Evaluando modelo...")
+            print(" Evaluando modelo...")
             evaluador = EvaluadorANFIS(modelo, {'X': X_test, 'y': y_test})
             # Controlar si se deben guardar/mostrar los gráficos de evaluación
             resultados_eval = evaluador.evaluar_modelo(
@@ -198,7 +198,7 @@ class PipelineANFIS:
     def _mostrar_resumen(self, resultados):
         """Muestra resumen de resultados"""
         print("\n" + "="*60)
-        print("📈 RESUMEN FINAL")
+        print(" RESUMEN FINAL")
         print("="*60)
         
         if 'evaluacion' in resultados:

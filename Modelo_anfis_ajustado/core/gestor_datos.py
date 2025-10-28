@@ -47,7 +47,7 @@ class GestorDatos:
                         return self._procesar_caracteristicas(features, labels, entrenamiento=True)
         
         # Procesar desde disco
-        print("🔄 Procesando datos de entrenamiento desde disco...")
+        print(" Procesando datos de entrenamiento desde disco...")
         features, labels = process_all_images(
             tumor_dir=tumor_dir,
             notumor_dir=notumor_dir,
@@ -95,7 +95,7 @@ class GestorDatos:
                         return self._procesar_caracteristicas(features, labels, entrenamiento=False)
         
         # Procesar desde disco
-        print("🔄 Procesando datos de prueba desde disco...")
+        print(" Procesando datos de prueba desde disco...")
         features, labels = process_all_images(
             tumor_dir=tumor_dir,
             notumor_dir=notumor_dir,
