@@ -54,6 +54,7 @@ class VentanaGraficos:
         self.show_cache_graficos = tk.BooleanVar(value=True)
         self.show_cache_reportes = tk.BooleanVar(value=True)
         self.show_cache_metricas = tk.BooleanVar(value=True)
+        self.show_cache_datos_reglas = tk.BooleanVar(value=True)
         self.show_analisis = tk.BooleanVar(value=True)
         self.show_imagenes_intermedias = tk.BooleanVar(value=True)
 
@@ -103,7 +104,7 @@ class VentanaGraficos:
         # 4. Directorio de cache para datos de reglas
         try:
             cache_datos_reglas = sistema_rutas.cache_dir / "resultados" / "datos_reglas"
-            if cache_datos_reglas.exists():
+            if self.show_cache_datos_reglas.get() and cache_datos_reglas.exists():
                 rutas_busqueda.append(str(cache_datos_reglas))
         except Exception:
             pass
@@ -256,6 +257,8 @@ class VentanaGraficos:
         ttk.Checkbutton(fuentes_frame, text="Cache - Reportes", variable=self.show_cache_reportes,
                        command=self.actualizar_lista).pack(side=tk.LEFT, padx=5)
         ttk.Checkbutton(fuentes_frame, text="Cache - Métricas", variable=self.show_cache_metricas,
+                       command=self.actualizar_lista).pack(side=tk.LEFT, padx=5)
+        ttk.Checkbutton(fuentes_frame, text="Cache - datos reglas", variable=self.show_cache_datos_reglas,
                        command=self.actualizar_lista).pack(side=tk.LEFT, padx=5)
         ttk.Checkbutton(fuentes_frame, text="Análisis", variable=self.show_analisis,
                        command=self.actualizar_lista).pack(side=tk.LEFT, padx=5)

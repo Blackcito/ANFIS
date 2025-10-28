@@ -217,7 +217,7 @@ class SistemaCache:
                 with open(ruta_archivo, 'wb') as f:
                     f.write(datos_bytes)
             
-            print(f" Gráfico guardado en caché: {ruta_archivo}")
+            #print(f" Gráfico guardado en caché: {ruta_archivo}")
             return ruta_archivo
         except Exception as e:
             print(f" Error guardando gráfico: {e}")
@@ -237,7 +237,7 @@ class SistemaCache:
             with open(ruta_archivo, 'w', encoding='utf-8') as f:
                 f.write(contenido)
             
-            print(f" Reporte guardado en caché: {ruta_archivo}")
+            #print(f" Reporte guardado en caché: {ruta_archivo}")
             return ruta_archivo
         except Exception as e:
             print(f" Error guardando reporte: {e}")
@@ -261,7 +261,7 @@ class SistemaCache:
             with open(ruta_txt, 'w', encoding='utf-8') as f:
                 f.write(datos_txt)
             
-            print(f" Datos de reglas guardados en caché: {nombre_base}")
+            #print(f" Datos de reglas guardados en caché: {nombre_base}")
             return {'csv': ruta_csv, 'txt': ruta_txt}
         except Exception as e:
             print(f" Error guardando datos de reglas: {e}")
@@ -281,7 +281,7 @@ class SistemaCache:
             with open(ruta_archivo, 'w', encoding='utf-8') as f:
                 json.dump(metricas, f, indent=2, ensure_ascii=False)
             
-            print(f" Métricas guardadas en caché: {ruta_archivo}")
+            #print(f" Métricas guardadas en caché: {ruta_archivo}")
             return ruta_archivo
         except Exception as e:
             print(f" Error guardando métricas: {e}")
