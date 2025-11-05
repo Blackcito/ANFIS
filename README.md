@@ -1,3 +1,5 @@
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/Blackcito/ANFIS)
+
 # ANFIS: Sistema de Inferencia Neuro-Difusa Adaptativo
 
 Este repositorio contiene implementaciones de redes neuronales de lógica difusa (ANFIS) para la clasificación de imágenes tumorales.  
@@ -17,3 +19,5 @@ Asegúrate de tener instalados los siguientes paquetes de Python:
 
 ```bash
 pip install numpy pandas scikit-learn matplotlib tensorflow
+
+
