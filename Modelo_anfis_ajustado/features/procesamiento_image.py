@@ -116,7 +116,7 @@ def process_all_images(tumor_dir=None, notumor_dir=None, save_dir=None, save_ima
 
     # Buscar imágenes en directorio de tumor
     if tumor_dir and os.path.exists(tumor_dir):
-        tumor_patterns = ["*.jpg", "*.jpeg", "*.JPG", "*.JPEG"]
+        tumor_patterns = ["*.jpg", "*.jpeg"]
         for pattern in tumor_patterns:
             tumor_paths = glob.glob(os.path.join(tumor_dir, pattern))
             for path in tumor_paths:
@@ -125,7 +125,7 @@ def process_all_images(tumor_dir=None, notumor_dir=None, save_dir=None, save_ima
 
     # Buscar imágenes en directorio de no-tumor
     if notumor_dir and os.path.exists(notumor_dir):
-        notumor_patterns = ["*.jpg", "*.jpeg", "*.JPG", "*.JPEG"]
+        notumor_patterns = ["*.jpg", "*.jpeg"]
         for pattern in notumor_patterns:
             notumor_paths = glob.glob(os.path.join(notumor_dir, pattern))
             for path in notumor_paths:
