@@ -1,50 +1,19 @@
 {
-  "repo_notes": [
-    {
-      "content": "El proyecto implementa sistemas difusos ANFIS y Mamdani para la detección de tumores cerebrales. Los directorios principales son Modelo_anfis_ajustado, ANFIS_model_3_cate y Mamdani_Model, que contienen la implementación ajustada del modelo binario, el modelo multiclase y el sistema Mamdani respectivamente. Solo estas carpetas deben ser documentadas en profundidad."
-    }
-  ],
-  "folders": [
-    "Modelo_anfis_ajustado",
-    "ANFIS_model_3_cate",
-    "Mamdani_Model"
-  ],
-  "pages": [
-    {
-      "title": "Modelo ANFIS Ajustado",
-      "purpose": "Documentar el sistema principal en Modelo_anfis_ajustado, incluyendo entrenamiento, evaluación, GUI y herramientas de análisis.",
-      "page_notes": [
-        {
-          "content": "Cubre subcarpetas core, features, interfaz, utils y analysis. Enfatiza cómo se integran los componentes del modelo y su flujo general."
-        }
-      ]
-    },
-    {
-      "title": "Modelo ANFIS Multiclase",
-      "purpose": "Explicar la implementación en ANFIS_model_3_cate para la clasificación de tres tipos de tumores, incluyendo pipeline, reglas difusas y evaluación.",
-      "page_notes": [
-        {
-          "content": "Describe las diferencias frente al modelo binario y la adaptación del entrenamiento para múltiples clases."
-        }
-      ]
-    },
-    {
-      "title": "Modelo Mamdani",
-      "purpose": "Describir el sistema Mamdani_Model, su arquitectura, entrenamiento y diferencias conceptuales con ANFIS.",
-      "page_notes": [
-        {
-          "content": "Incluye detalles de la inferencia, la configuración de reglas y su papel comparativo dentro del proyecto."
-        }
-      ]
-    },
-    {
-      "title": "Arquitectura General del Proyecto",
-      "purpose": "Presentar una visión unificada de los tres sistemas (ANFIS ajustado, ANFIS multiclase y Mamdani), su flujo de datos, dependencias y estructura general.",
-      "page_notes": [
-        {
-          "content": "Relaciona cómo las tres implementaciones se complementan y cómo se organizan dentro del repositorio."
-        }
-      ]
-    }
-  ]
+  "wiki": {
+    "title": "ANFIS Tumor Cerebral - Modelo Ajustado",
+    "description": "Documentación del modelo ANFIS con GUI y versionado para predicción de tumores cerebrales.",
+    "include": [
+      "Modelo_anfis_ajustado/**",
+      "README.md",
+      "requirements.txt",
+      "ANFIS_Tumor_Cerebral.spec"
+    ],
+    "exclude": [
+      "ANFIS_model/**",
+      "ANFIS_model_3_cate/**",
+      "Mamdani_Model/**",
+      "modelos_pruebas/**",
+      "archive/**"
+    ]
+  }
 }
